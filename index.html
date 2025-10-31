@@ -131,7 +131,8 @@
 
     let rows = JSON.parse(localStorage.getItem(STORAGE) || '[]');
     if(!rows.length){
-      
+      rows = [
+      ];
       persist();
     }
 
