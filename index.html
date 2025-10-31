@@ -131,11 +131,7 @@
 
     let rows = JSON.parse(localStorage.getItem(STORAGE) || '[]');
     if(!rows.length){
-      rows = [
-        {entrega:'1', unidade:'USF Bosque Azul', tipo:'UBS', espaco:'Sim', cond:'Pronta', drywall:'OK', dtinicio:'2025-10-01', dtfim:'2025-10-07', ambiente:'Consultório', plotagem:'Planejada', resp:'Alan, Marcelo', obs:'Ajustar rede'},
-        {entrega:'2', unidade:'Clínica do Idoso', tipo:'Policlínica', espaco:'Sim', cond:'Pronta', drywall:'OK', dtinicio:'2025-10-08', dtfim:'2025-10-10', ambiente:'Consultório', plotagem:'Aguardando', resp:'Marcelo', obs:'Plotagem porta pendente'},
-        {entrega:'3', unidade:'UBS Moacyr Santos', tipo:'UBS', espaco:'Não', cond:'Em reforma', drywall:'Em andamento', dtinicio:'', dtfim:'', ambiente:'Cabine', plotagem:'Planejada', resp:'Maclaud', obs:'Aguardar liberação da sala'}
-      ];
+      
       persist();
     }
 
