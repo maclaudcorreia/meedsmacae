@@ -91,7 +91,7 @@
       <label class="px-3 py-1 border rounded-lg hover:bg-gray-100 cursor-pointer">Importar CSV
         <input id="imp" type="file" accept=".csv" hidden>
       </label>
-      <button id="clr" class="px-3 py-1 border rounded-lg text-red-600 hover:bg-red-50">Zerar (local)</button>
+      <button id="clr" class="px-3 py-1 border rounded-lg text-red-600 hover:bg-red-50">Apagar Tudo</button>
     </div>
 
     <div class="table-responsive overflow-x-auto bg-white rounded-2xl shadow">
@@ -265,7 +265,22 @@
 
     /* ===== Toolbar ===== */
     document.getElementById('addRow').onclick=()=>{ rows.push({}); persist(); renderRows(); };
-    document.getElementById('clr').onclick=()=>{ if(confirm('Apagar tudo?')){ rows=[]; persist(); renderRows(); } };
+
+    // Função para "Zerar (local)" com senha
+    document.getElementById('clr').onclick = () => {
+      const senha = prompt("Digite a senha para zerar os dados:");
+      if (senha === "c6h12o6") {  // Substitua 'suaSenha' pela senha desejada
+        if (confirm('Tem certeza que deseja apagar todos os dados?')) {
+          rows = [];
+          persist();
+          renderRows();
+          alert("Dados apagados com sucesso!");
+        }
+      } else {
+        alert("Senha incorreta!");
+      }
+    };
+
     document.getElementById('exp').onclick=()=>{
       const header = columns.map(c=>c.key).join(',');
       const lines = rows.map(r=> columns.map(c=> JSON.stringify(r[c.key]||'')).join(','));
