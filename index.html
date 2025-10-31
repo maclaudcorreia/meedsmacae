@@ -45,12 +45,38 @@
       background-color: #dcfce7;  /* verde claro */
       border-color: #22c55e;      /* borda verde */
     }
+
+    /* Responsividade */
+    .container {
+      width: 100%;
+    }
+
+    .table-responsive {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    /* Ajusta as colunas na tabela para telas pequenas */
+    @media (max-width: 768px) {
+      th, td {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+        text-align: left;
+      }
+
+      .table-wrapper {
+        display: block;
+        overflow-x: auto;
+        max-width: 100%;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
-<body style="background-color: #ADD8E6;"> <!-- Azul claro -->
+  <body style="background-color: #ADD8E6;"> <!-- Azul claro -->
   <!-- Conteúdo da página -->
-</body>
+  </body>
   <header class="px-6 py-4 border-b bg-white text-center">
     <!-- Título centralizado, com a imagem se desejado -->
     <h1 class="text-2xl font-bold inline-flex items-center justify-center">
@@ -68,7 +94,7 @@
       <button id="clr" class="px-3 py-1 border rounded-lg text-red-600 hover:bg-red-50">Zerar (local)</button>
     </div>
 
-    <div class="overflow-x-auto bg-white rounded-2xl shadow">
+    <div class="table-responsive overflow-x-auto bg-white rounded-2xl shadow">
       <table class="min-w-full border-collapse text-sm">
         <thead>
           <tr id="thead" class="bg-gray-100"></tr>
