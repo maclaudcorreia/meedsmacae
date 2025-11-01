@@ -3,103 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tabela Operacional</title>
+  <title>MEEDS MACAÉ</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     /* UI geral */
     ::-webkit-scrollbar { height: 8px; width: 8px; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 8px; }
-    thead th { position: sticky; top: 0; background: #f3f4f6; z-index: 2; box-shadow: 0 1px 0 #e5e7eb; }
 
-    /* Chips de responsáveis (multi-select visual) */
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      padding: .22rem .55rem;
-      border-radius: 12px;
-      font-size: .72rem;
-      font-weight: 700;
-      line-height: 1;
-      background: #eff6ff;
-      color: #1e40af;
-      border: 1px solid #bfdbfe;
+    /* Cabeçalho da tabela */
+    thead th { position: sticky; top: 0; background: #ffffff; z-index: 2; box-shadow: 0 1px 0 #e5e7eb; }
+
+    /* Estilos dos filtros */
+    .select-mini {
+        padding: .25rem .5rem;
+        border: 1px solid #3b82f6; /* Blue-500 */
+        border-radius: .5rem;
+        background: #fff; /* Fundo branco */
     }
 
-
-
-    .tag button {
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      font-weight: 800;
-      line-height: 1;
-      color: #1e40af;
-    }
-
-
-
-    .tag button:hover { color: #0b3ea8; }
-    .select-mini { padding: .25rem .5rem; border: 1px solid #e5e7eb; border-radius: .5rem; background: #fff; }
-
-    /* Datas coloridas */
-    input.date-inicio { background: #fee2e2; border-color: #ef4444; }
-    input.date-inicio:focus { outline: 1; box-shadow: 0 0 0 2px #fecaca; }
-    input.date-fim { background: #dcfce7; border-color: #22c55e; }
-    input.date-fim:focus { outline: 1; box-shadow: 0 0 0 2px #bbf7d0; }
-
-    /* Estilo dos campos de Treinamento */
-    input.treinamento {
-      transition: background 0.2s, border 0.2s;
-    }
-
-    input.treinamento.pendente {
-      background-color: #fef9c3; /* amarelo claro */
-      border-color: #facc15; /* borda amarela */
-    }
-
-    input.treinamento.ok {
-      background-color: #dcfce7; /* verde claro */
-      border-color: #22c55e; /* borda verde */
-    }
-
-    /* Responsividade */
-    .container {
+    /* Estilos dos gráficos - IDs unificados */
+    #progressTreinamentoChart, #progressAcompanhamentoChart, #progressFinalizadaChart {
+      max-width: 300px; /* Largura máxima */
+      max-height: 300px; /* Altura máxima */
       width: 100%;
+      height: auto;
+      margin: 0 auto; /* Centraliza o canvas DENTRO da sua div pai */
     }
 
-    .table-responsive {
-      max-width: 100%;
-      overflow-x: auto;
-    }
-
-    /* Ajusta as colunas na tabela para telas pequenas */
-    @media (max-width: 768px) {
-      th, td {
-        display: block;
-        width: 100%;
-        padding: 1rem;
-        text-align: left;
-      }
-
-      .table-wrapper {
-        display: block;
-        overflow-x: auto;
-        max-width: 100%;
-      }
-    }
-
-    /* Tamanho ajustado do gráfico */
-    #treinamentoChart {
-      max-width: 400px; /* Largura máxima */
-      max-height: 400px; /* Altura máxima */
-      width: 100%; /* Adapte a largura para 100% da tela disponível */
-      height: auto; /* Mantém a proporção do gráfico */
+    /* Cor de fundo do body */
+    body {
+        background-color: #f0f8ff; /* Cor azul bem clara */
+        color: #1f2937; /* Cor de texto padrão */
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="text-gray-800">
   <header class="px-6 py-4 border-b bg-white text-center">
     <h1 class="text-2xl font-bold inline-flex items-center justify-center">
       <img src="logo%20callmed%201.PNG" alt="Ícone" class="mr-2 w-100 h-20">Tabela Treinamentos
@@ -107,21 +51,62 @@
   </header>
 
   <main class="max-w-7xl mx-auto mt-6">
-    <!-- Barra de navegação -->
     <div class="flex mb-3">
       <button id="tabPrincipal" class="px-3 py-1 border rounded-lg hover:bg-gray-100">Aba Principal</button>
       <button id="tabDashboard" class="px-3 py-1 border rounded-lg hover:bg-gray-100 ml-2">Dashboard</button>
-    </div>
+      </div>
 
-    <!-- Aba Principal -->
     <div id="tabPrincipalContent">
       <div class="flex flex-wrap gap-2 mb-3">
-        <button id="addRow" class="px-3 py-1 border rounded-lg hover:bg-gray-100">Nova linha</button>
-        <button id="exp" class="px-3 py-1 border rounded-lg hover:bg-gray-100">Exportar CSV</button>
-        <label class="px-3 py-1 border rounded-lg hover:bg-gray-100 cursor-pointer">Importar CSV
-          <input id="imp" type="file" accept=".csv" hidden>
-        </label>
-        <button id="clr" class="px-3 py-1 border rounded-lg text-red-600 hover:bg-red-50">Apagar Tudo</button>
+        <button id="addRow" class="px-3 py-1 rounded-lg text-white bg-green-500 hover:bg-green-600">
+            Nova linha
+        </button>
+
+        <div class="relative inline-block text-left">
+          <button id="downloadButton" class="px-3 py-1 rounded-lg text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 inline-flex items-center">
+            Download
+            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+
+          <div id="downloadMenu" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="downloadButton">
+              <a href="#" id="exportCsvBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                Exportar CSV
+              </a>
+              <a href="#" id="exportXlsBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                Exportar XLS
+              </a>
+              <a href="#" id="exportPdfBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                Exportar PDF
+              </a>
+            </div>
+          </div>
+        </div>
+        <button id="clr" class="px-3 py-1 rounded-lg text-white bg-red-600 hover:bg-red-700 ml-auto">
+            Apagar Tudo
+        </button>
+      </div>
+
+      <div class="flex flex-wrap gap-4 mb-3 p-4 bg-white rounded-lg shadow-md border">
+        <label class="font-semibold text-gray-700 self-center">Filtros:</label>
+
+        <div>
+          <label for="filterTreinamento" class="text-sm block">Treinamento:</label>
+          <select id="filterTreinamento" class="select-mini">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="filterResp" class="text-sm block">Responsáveis:</label>
+          <select id="filterResp" class="select-mini">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <button id="clearFilters" class="px-3 py-1 border border-blue-500 rounded-lg hover:bg-blue-50 text-blue-600 text-sm self-end">Limpar Filtros</button>
       </div>
 
       <div class="table-responsive overflow-x-auto bg-white rounded-2xl shadow">
@@ -134,36 +119,69 @@
       </div>
 
       <p class="text-xs text-gray-500 mt-2 px-1">
-        Dica: os campos de texto são editáveis, “Responsáveis” tem chips (), e as datas têm cores por tipo.
         Tudo é salvo automaticamente no seu navegador.
       </p>
     </div>
 
-    <!-- Aba Dashboard (escondida inicialmente) -->
     <div id="tabDashboardContent" class="hidden bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4">Dashboard</h2>
-      <div>
-        <p><strong>Treinamentos OK: <span id="treinamentoOk"></span>%</strong></p>
-        <p><strong>Treinamentos Pendentes: <span id="treinamentoPendente"></span>%</strong></p>
-        <canvas id="treinamentoChart" width="300" height="300"></canvas>
+      <h2 class="text-xl font-semibold mb-4">Dashboard de Treinamentos e Progresso</h2>
+      <div class="flex flex-wrap gap-8 justify-center">
+        <div class="w-full sm:w-1/2 lg:w-1/4 p-2 border rounded-lg shadow-inner">
+            <h3 class="text-lg font-medium mb-2 text-center">Progresso Treinamento</h3>
+            <p class="text-center"><strong>OK: <span id="progressTreinamentoPercentOk"></span>%</strong></p>
+            <p class="text-center"><strong>Pendente: <span id="progressTreinamentoPercentPendente"></span>%</strong></p>
+            <div class="text-2xl font-bold mb-3 text-center">
+                <span id="progressTreinamentoCountOk" class="text-green-600">0</span> de <span id="progressTreinamentoCountTotal">0</span>
+            </div>
+            <canvas id="progressTreinamentoChart" width="300" height="300"></canvas>
+        </div>
+
+        <div class="w-full sm:w-1/2 lg:w-1/4 p-2 border rounded-lg shadow-inner">
+            <h3 class="text-lg font-medium mb-2 text-center">Progresso Acompanhamento</h3>
+            <p class="text-center"><strong>Realizado: <span id="progressAcompanhamentoPercentRealizado"></span>%</strong></p>
+            <p class="text-center"><strong>Não Realizado: <span id="progressAcompanhamentoPercentNaoRealizado"></span>%</strong></p>
+            <div class="text-2xl font-bold mb-3 text-center">
+                <span id="progressAcompanhamentoCountRealizado" class="text-yellow-600">0</span> de <span id="progressAcompanhamentoCountTotal">0</span>
+            </div>
+            <canvas id="progressAcompanhamentoChart" width="300" height="300"></canvas>
+        </div>
+
+        <div class="w-full sm:w-1/2 lg:w-1/4 p-2 border rounded-lg shadow-inner">
+            <h3 class="text-lg font-medium mb-2 text-center">Progresso Geral</h3>
+            <p class="text-center"><strong>SIM: <span id="progressFinalizadaPercentSim"></span>%</strong></p>
+            <p class="text-center"><strong>NÃO: <span id="progressFinalizadaPercentNao"></span>%</strong></p>
+            <div class="text-2xl font-bold mb-3 text-center">
+                <span id="progressFinalizadaCountSim" class="text-blue-600">0</span> de <span id="progressFinalizadaCountTotal">0</span>
+            </div>
+            <canvas id="progressFinalizadaChart" width="300" height="300"></canvas>
+        </div>
       </div>
-      <!-- Botão para atualizar gráfico -->
-      <button id="updateChartButton" class="px-3 py-1 border rounded-lg hover:bg-gray-100 mt-4">Atualizar Gráfico</button>
     </div>
-  </main>
+
+    </main>
 
   <script>
-    const STORAGE = 'tabela_operacional_v3';
-    let chartInstance = null; // Variável para armazenar o gráfico
+    const STORAGE = 'tabela_operacional_v4';
+    let progressTreinamentoChartInstance = null;
+    let progressAcompanhamentoChartInstance = null;
+    let progressFinalizadaChartInstance = null;
 
+    const filterTreinamentoEl = document.getElementById('filterTreinamento');
+    const filterRespEl = document.getElementById('filterResp');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+
+    // 1. ESTRUTURA DE COLUNAS ATUALIZADA
     let columns = [
       { key: 'unidade', label: 'Unidade', type: 'select', width: 80, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e do Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro' },
       { key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 90, options: 'UBS,UPA,Hospital' },
       { key: 'dtinicio', label: 'Data Início', type: 'date', width: 120 },
       { key: 'dtfim', label: 'Data Fim', type: 'date', width: 120 },
+      // NOVA COLUNA "TEMPO"
+      { key: 'tempo', label: 'Tempo(Dias)', type: 'display', width: 50 },
       { key: 'treinamento', label: 'Treinamento', type: 'select', width: 40, options: 'Ok,Pendente' },
       { key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
       { key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
+      { key: 'finalizada', label: 'FINALIZADA', type: 'select', width: 40, options: 'Sim ,Não' },
       { key: 'acoes', label: 'Ações', type: 'actions', width: 80 }
     ];
 
@@ -175,6 +193,25 @@
 
     function persist() { localStorage.setItem(STORAGE, JSON.stringify(rows)); }
     function tdBase(w) { const td = document.createElement('td'); td.className = 'border-t'; td.style.minWidth = w + 'px'; return td; }
+
+
+    // 2. FUNÇÃO DE CÁLCULO DE TEMPO
+    function calculateTime(row) {
+        if (row.dtinicio && row.dtfim) {
+            const start = new Date(row.dtinicio);
+            const end = new Date(row.dtfim);
+
+            // Corrige para o fuso horário para garantir que a diferença seja exata em dias
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Adiciona 1 para incluir o dia de início na contagem
+            row.tempo = diffDays + 1;
+        } else {
+            row.tempo = '';
+        }
+    }
+
 
     function renderHead() {
       const tr = document.getElementById('thead');
@@ -188,11 +225,33 @@
       });
     }
 
+    function applyFilters() {
+        const filterTreinamento = filterTreinamentoEl.value;
+        const filterResp = filterRespEl.value;
+
+        let filteredRows = rows;
+
+        if (filterTreinamento) {
+            filteredRows = filteredRows.filter(row => row.treinamento === filterTreinamento);
+        }
+
+        if (filterResp) {
+            filteredRows = filteredRows.filter(row => row.resp === filterResp);
+        }
+
+        return filteredRows;
+    }
+
     function renderRows() {
       const tb = document.getElementById('tbody');
       tb.innerHTML = '';
 
-      rows.forEach((row, i) => {
+      const rowsToRender = applyFilters();
+
+      rowsToRender.forEach((row, i) => {
+        // Garante que o cálculo de tempo seja feito antes de renderizar
+        calculateTime(row);
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-gray-50';
 
@@ -204,15 +263,28 @@
             const inp = document.createElement('input');
             inp.className = 'px-2 py-1 border rounded-lg w-full';
             inp.value = row[col.key] || '';
-            inp.oninput = () => { row[col.key] = inp.value; persist(); updateDashboard(); };
+            inp.oninput = () => { row[col.key] = inp.value; persist(); updateDashboardData(); };
             td.appendChild(inp);
           } else if (col.type === 'date') {
             const inp = document.createElement('input');
             inp.type = 'date';
             inp.className = 'px-2 py-1 border rounded-lg w-full';
             inp.value = row[col.key] || '';
-            inp.oninput = () => { row[col.key] = inp.value; persist(); updateDashboard(); };
+            // Atualiza a lógica de oninput para recalcular o tempo
+            inp.oninput = () => {
+                row[col.key] = inp.value;
+                calculateTime(row);
+                persist();
+                renderRows(); // Renderiza novamente para atualizar o campo 'Tempo'
+            };
             td.appendChild(inp);
+          } else if (col.type === 'display') {
+            // Nova lógica para exibir o campo "Tempo" (somente leitura)
+            const span = document.createElement('span');
+            span.textContent = row[col.key] || '-';
+            span.className = 'px-2 py-1 block w-full font-semibold';
+            td.appendChild(span);
+
           } else if (col.type === 'select') {
             const sel = document.createElement('select');
             sel.className = 'px-2 py-1 border rounded-lg bg-white w-full';
@@ -223,20 +295,25 @@
               sel.appendChild(op);
             });
             sel.value = row[col.key] || '';
-            sel.onchange = () => { row[col.key] = sel.value; persist(); updateDashboard(); };
+            sel.onchange = () => { row[col.key] = sel.value; persist(); updateDashboardData(); };
+            sel.classList.add('select-mini');
             td.appendChild(sel);
           } else if (col.type === 'actions') {
             const btn = document.createElement('button');
             btn.innerHTML = '🗑️';
             btn.title = 'Excluir linha';
             btn.className = 'px-2 py-1 rounded-lg border hover:bg-red-50 hover:text-red-600';
+
             btn.onclick = () => {
               const senha = prompt("Digite a senha para excluir esta linha:");
               if (senha === "1") {
                 if (confirm('Tem certeza que deseja excluir esta linha?')) {
-                  rows.splice(i, 1);
-                  persist();
-                  renderRows();
+                  const originalIndex = rows.findIndex(r => r === row);
+                  if (originalIndex !== -1) {
+                      rows.splice(originalIndex, 1);
+                      persist();
+                      renderRows();
+                  }
                 }
               } else {
                 alert("Senha incorreta!");
@@ -251,72 +328,388 @@
         tb.appendChild(tr);
       });
 
-      updateDashboard(); // Atualiza o dashboard sempre que a tabela for renderizada
+      updateDashboardData();
     }
 
-    // Função para calcular o percentual de "Ok" e "Pendente"
-    function updateDashboard() {
-      const treinamentoOk = rows.filter(row => row.treinamento === "Ok").length;
-      const treinamentoPendente = rows.filter(row => row.treinamento === "Pendente").length;
-
-      const total = rows.length;
-      const percentualOk = total === 0 ? 0 : (treinamentoOk / total) * 100;
-      const percentualPendente = total === 0 ? 0 : (treinamentoPendente / total) * 100;
-
-      document.getElementById("treinamentoOk").textContent = percentualOk.toFixed(2);
-      document.getElementById("treinamentoPendente").textContent = percentualPendente.toFixed(2);
-      updateChart(percentualOk, percentualPendente); // Atualiza o gráfico
-    }
-
-    // Função para atualizar o gráfico
-    function updateChart(treinamentoOk, treinamentoPendente) {
-      const ctx = document.getElementById('treinamentoChart').getContext('2d');
-
-      // Se já houver um gráfico, destrua-o antes de criar um novo
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
-
-      chartInstance = new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: ['Treinamentos Ok', 'Treinamentos Pendentes'],
-          datasets: [{
-            data: [treinamentoOk, treinamentoPendente],
-            backgroundColor: ['#4CAF50', '#FFEB3B'],
-            borderColor: ['#388E3C', '#FBC02D'],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            tooltip: {
-              callbacks: {
-                label: function(tooltipItem) {
-                  return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + '%';
-                }
-              }
-            }
-          }
+    function populateFilterOptions() {
+        const treinamentoCol = columns.find(c => c.key === 'treinamento');
+        if (treinamentoCol) {
+            const options = treinamentoCol.options.split(',').map(s => s.trim()).filter(Boolean);
+            options.forEach(option => {
+                const op = document.createElement('option');
+                op.value = option;
+                op.textContent = option;
+                filterTreinamentoEl.appendChild(op);
+            });
         }
-      });
+
+        const respCol = columns.find(c => c.key === 'resp');
+        if (respCol) {
+            const options = respCol.options.split(',').map(s => s.trim()).filter(Boolean);
+            options.forEach(option => {
+                const op = document.createElement('option');
+                op.value = option;
+                op.textContent = option;
+                filterRespEl.appendChild(op);
+            });
+        }
+
+        filterTreinamentoEl.onchange = renderRows;
+        filterRespEl.onchange = renderRows;
+
+        clearFiltersBtn.onclick = () => {
+            filterTreinamentoEl.value = '';
+            filterRespEl.value = '';
+            renderRows();
+        };
     }
 
-    // Mostrar a seção do dashboard
-    document.getElementById('tabDashboard').onclick = () => {
-      const dashboardSection = document.getElementById("tabDashboardContent");
-      dashboardSection.classList.toggle("hidden");
-      updateDashboard(); // Atualiza as informações do dashboard
+    function updateDashboardData() {
+        const total = rows.length;
+
+        // DADOS DE TREINAMENTO (Bloco 1)
+        const treinamentoOk = rows.filter(row => row.treinamento === "Ok").length;
+        const treinamentoPendente = rows.filter(row => row.treinamento === "Pendente").length;
+        const percentualOk = total === 0 ? 0 : (treinamentoOk / total) * 100;
+        const percentualPendente = total === 0 ? 0 : (treinamentoPendente / total) * 100;
+
+        // DADOS DE ACOMPANHAMENTO (Bloco 2)
+        const acompanhamentoRealizado = rows.filter(row => row.acompanhamento === "Realizado").length;
+        const acompanhamentoNaoRealizado = rows.filter(row => row.acompanhamento === "Não Realizado").length;
+        const percentualRealizado = total === 0 ? 0 : (acompanhamentoRealizado / total) * 100;
+        const percentualNaoRealizado = total === 0 ? 0 : (acompanhamentoNaoRealizado / total) * 100;
+
+        // DADOS DE FINALIZADA (Bloco 3)
+        const finalizadaSim = rows.filter(row => row.finalizada === "Sim").length;
+        const finalizadaNao = rows.filter(row => row.finalizada === "Não").length;
+        const percentualSim = total === 0 ? 0 : (finalizadaSim / total) * 100;
+        const percentualNao = total === 0 ? 0 : (finalizadaNao / total) * 100;
+
+
+        // Atualiza Textos Bloco 1 (Treinamento)
+        document.getElementById("progressTreinamentoPercentOk").textContent = percentualOk.toFixed(2);
+        document.getElementById("progressTreinamentoPercentPendente").textContent = percentualPendente.toFixed(2);
+        document.getElementById("progressTreinamentoCountOk").textContent = treinamentoOk;
+        document.getElementById("progressTreinamentoCountTotal").textContent = total;
+
+        // Atualiza Textos Bloco 2 (Acompanhamento)
+        document.getElementById("progressAcompanhamentoPercentRealizado").textContent = percentualRealizado.toFixed(2);
+        document.getElementById("progressAcompanhamentoPercentNaoRealizado").textContent = percentualNaoRealizado.toFixed(2);
+        document.getElementById("progressAcompanhamentoCountRealizado").textContent = acompanhamentoRealizado;
+        document.getElementById("progressAcompanhamentoCountTotal").textContent = total;
+
+        // Atualiza Textos Bloco 3 (Finalizada)
+        document.getElementById("progressFinalizadaPercentSim").textContent = percentualSim.toFixed(2);
+        document.getElementById("progressFinalizadaPercentNao").textContent = percentualNao.toFixed(2);
+        document.getElementById("progressFinalizadaCountSim").textContent = finalizadaSim;
+        document.getElementById("progressFinalizadaCountTotal").textContent = total;
+
+        // Atualiza os gráficos
+        const tabDashboardContent = document.getElementById('tabDashboardContent');
+        if (!tabDashboardContent.classList.contains('hidden')) {
+            updateProgressTreinamentoChart(treinamentoOk, treinamentoPendente);
+            updateProgressAcompanhamentoChart(acompanhamentoRealizado, acompanhamentoNaoRealizado);
+            updateProgressFinalizadaChart(finalizadaSim, finalizadaNao);
+        }
+    }
+
+    // 1. Gráfico ROSCA (Progresso Treinamento OK/Pendente)
+    function updateProgressTreinamentoChart(okCount, pendingCount) {
+        const ctx = document.getElementById('progressTreinamentoChart').getContext('2d');
+
+        if (progressTreinamentoChartInstance) {
+            progressTreinamentoChartInstance.destroy();
+        }
+
+        progressTreinamentoChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Concluído (Ok)', 'Pendente'],
+                datasets: [{
+                    data: [okCount, pendingCount],
+                    backgroundColor: ['#10B981', '#FCD34D'],
+                    hoverBackgroundColor: ['#059669', '#FBBF24'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '80%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                return `${label}: ${value} linhas`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Gráfico ROSCA (Progresso Acompanhamento Realizado/Não Realizado)
+    function updateProgressAcompanhamentoChart(realizadoCount, naoRealizadoCount) {
+        const ctx = document.getElementById('progressAcompanhamentoChart').getContext('2d');
+
+        if (progressAcompanhamentoChartInstance) {
+            progressAcompanhamentoChartInstance.destroy();
+        }
+
+        progressAcompanhamentoChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Realizado', 'Não Realizado'],
+                datasets: [{
+                    data: [realizadoCount, naoRealizadoCount],
+                    backgroundColor: ['#F59E0B', '#EF4444'],
+                    hoverBackgroundColor: ['#D97706', '#DC2626'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '80%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                return `${label}: ${value} linhas`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+
+    // 3. Gráfico ROSCA (Progresso FINALIZADA SIM/NÃO)
+    function updateProgressFinalizadaChart(simCount, naoCount) {
+        const ctx = document.getElementById('progressFinalizadaChart').getContext('2d');
+
+        if (progressFinalizadaChartInstance) {
+            progressFinalizadaChartInstance.destroy();
+        }
+
+        progressFinalizadaChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Finalizada (Sim)', 'Não Finalizada'],
+                datasets: [{
+                    data: [simCount, naoCount],
+                    backgroundColor: ['#3B82F6', '#6B7280'],
+                    hoverBackgroundColor: ['#2563EB', '#4B5563'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '80%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                return `${label}: ${value} linhas`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+
+    // =======================================================
+    // FUNÇÕES DE EXPORTAÇÃO (CSV, XLS, PDF)
+    // =======================================================
+
+    function createDownloadLink(content, type, extension) {
+        // Byte Order Mark (BOM) para melhor suporte a acentuação no Excel
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM, content], { type: type });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', `tabela_treinamentos_${new Date().toISOString().slice(0, 10)}.${extension}`);
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // Prepara os dados no formato CSV/XLS
+    function prepareData(separator) {
+        const rowsToExport = applyFilters();
+        // 3. Garante que o cálculo de tempo seja feito para o download
+        rowsToExport.forEach(calculateTime);
+
+        const exportableColumns = columns.filter(c => c.key !== 'acoes');
+
+        const headers = exportableColumns.map(c => c.label).join(separator);
+
+        const csvRows = rowsToExport.map(row =>
+            exportableColumns.map(col => {
+                let value = row[col.key] || '';
+                // Escape aspas duplas, e coloque aspas se o valor contiver o separador, aspas ou quebra de linha.
+                value = String(value).replace(/"/g, '""');
+                if (value.includes(separator) || value.includes('"') || value.includes('\n')) {
+                    value = `"${value}"`;
+                }
+                return value;
+            }).join(separator)
+        );
+
+        return [headers, ...csvRows].join('\n');
+    }
+
+    // 1. EXPORTAR PARA CSV (Vírgula)
+    function exportToCsv() {
+        const content = prepareData(','); // Vírgula como separador
+        createDownloadLink(content, 'text/csv;charset=utf-8;', 'csv');
+    }
+
+    // 2. EXPORTAR PARA EXCEL (Ponto e Vírgula)
+    function exportToExcel() {
+        const content = prepareData(';'); // Ponto e vírgula como separador (Melhor para Excel Brasil)
+        createDownloadLink(content, 'application/vnd.ms-excel;charset=utf-8;', 'xls');
+    }
+
+    // 3. EXPORTAR PARA PDF (Usando jsPDF-autotable)
+    function exportToPDF() {
+        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+             alert('A biblioteca jsPDF não foi carregada. Verifique sua conexão e as tags <script> no <head>.');
+             return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4'); // 'l' para Paisagem
+        const rowsToExport = applyFilters();
+        rowsToExport.forEach(calculateTime); // Garante cálculo no PDF
+
+        const exportableColumns = columns.filter(c => c.key !== 'acoes');
+        const head = [exportableColumns.map(c => c.label)];
+        const body = rowsToExport.map(row =>
+            exportableColumns.map(col => String(row[col.key] || ''))
+        );
+
+        doc.autoTable({
+            head: head,
+            body: body,
+            theme: 'striped',
+            startY: 50,
+            styles: { fontSize: 8, cellPadding: 4, halign: 'center' },
+            headStyles: { fillColor: [59, 130, 246] },
+            didDrawPage: function (data) {
+                // Título
+                doc.setFontSize(14);
+                doc.text("Tabela de Treinamentos - MEEDS MACAÉ", data.settings.margin.left, 30);
+
+                // Rodapé
+                doc.setFontSize(8);
+                const pageCount = doc.internal.getNumberOfPages();
+                doc.text(`Página ${data.pageNumber} de ${pageCount}`, doc.internal.pageSize.width - data.settings.margin.right, doc.internal.pageSize.height - 10);
+            }
+        });
+
+        doc.save(`tabela_treinamentos_${new Date().toISOString().slice(0, 10)}.pdf`);
+    }
+
+    // =======================================================
+    // LÓGICA DO MENU DROPDOWN E ASSOCIAÇÕES
+    // =======================================================
+    const downloadButton = document.getElementById('downloadButton');
+    const downloadMenu = document.getElementById('downloadMenu');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const exportXlsBtn = document.getElementById('exportXlsBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+    // Alterna a visibilidade do menu
+    downloadButton.onclick = (e) => {
+        e.stopPropagation();
+        downloadMenu.classList.toggle('hidden');
     };
+
+    // Fecha o menu se clicar fora
+    document.addEventListener('click', (e) => {
+        if (downloadMenu && !downloadMenu.contains(e.target) && !downloadButton.contains(e.target)) {
+            downloadMenu.classList.add('hidden');
+        }
+    });
+
+    // Associa as funções aos botões do menu
+    exportCsvBtn.onclick = (e) => { e.preventDefault(); exportToCsv(); downloadMenu.classList.add('hidden'); };
+    exportXlsBtn.onclick = (e) => { e.preventDefault(); exportToExcel(); downloadMenu.classList.add('hidden'); };
+    exportPdfBtn.onclick = (e) => { e.preventDefault(); exportToPDF(); downloadMenu.classList.add('hidden'); };
+
+    // LÓGICA DE ABAS (TABS)
+    const tabPrincipal = document.getElementById('tabPrincipal');
+    const tabDashboard = document.getElementById('tabDashboard');
+    const tabPrincipalContent = document.getElementById('tabPrincipalContent');
+    const tabDashboardContent = document.getElementById('tabDashboardContent');
+
+    function showTab(tabName) {
+        // Estilos dos botões de aba
+        [tabPrincipal, tabDashboard].forEach(tab => {
+            tab.classList.remove('bg-white', 'shadow-sm', 'font-semibold');
+            tab.classList.add('bg-gray-50');
+        });
+
+        // Esconde os conteúdos
+        [tabPrincipalContent, tabDashboardContent].forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        if (tabName === 'principal') {
+            tabPrincipalContent.classList.remove('hidden');
+            tabPrincipal.classList.add('bg-white', 'shadow-sm', 'font-semibold');
+            tabPrincipal.classList.remove('bg-gray-50');
+            renderRows();
+        } else if (tabName === 'dashboard') {
+            tabDashboardContent.classList.remove('hidden');
+            tabDashboard.classList.add('bg-white', 'shadow-sm', 'font-semibold');
+            tabDashboard.classList.remove('bg-gray-50');
+            updateDashboardData();
+        }
+    }
+
+    tabPrincipal.onclick = () => showTab('principal');
+    tabDashboard.onclick = () => showTab('dashboard');
 
     document.getElementById('addRow').onclick = () => { rows.push({}); persist(); renderRows(); };
 
+    // FUNÇÃO APAGAR TUDO
+    document.getElementById('clr').onclick = () => {
+      const senha = prompt("🚨 Digite a senha para APAGAR TODOS os dados:");
+      if (senha === "1") {
+        if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja APAGAR TODOS os dados da tabela? Esta ação é IRREVERSÍVEL!')) {
+          rows = [];
+          persist();
+          renderRows();
+          showTab('principal');
+          alert("✅ Todos os dados foram apagados com sucesso!");
+        }
+      } else if (senha !== null) {
+        alert("❌ Senha incorreta! Os dados não foram apagados.");
+      }
+    };
+
     /* ===== Start ===== */
-    renderHead(); renderRows();
+    populateFilterOptions();
+    renderHead();
+    showTab('principal'); // Inicia na aba principal
   </script>
 </body>
 </html>
