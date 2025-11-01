@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>MEEDS MACAÉ</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -12,6 +14,23 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
   <style>
+    /* * NOVO: Configuração para usar a fonte Poppins
+     * Usamos uma classe utilitária (se for necessário)
+     * Mas vamos configurar o Tailwind para reconhecer a fonte globalmente.
+    */
+
+    /* Configuração do Tailwind para reconhecer a fonte: */
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            // Agora você pode usar a classe 'font-poppins'
+            poppins: ['Poppins', 'sans-serif'],
+          }
+        }
+      }
+    }
+
     /* UI geral */
     ::-webkit-scrollbar { height: 8px; width: 8px; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 8px; }
@@ -45,7 +64,7 @@
 </head>
 <body class="text-gray-800">
   <header class="px-6 py-4 border-b bg-white text-center">
-    <h1 class="text-2xl font-bold inline-flex items-center justify-center">
+    <h1 class="text-2xl font-bold font-poppins inline-flex items-center justify-center">
       <img src="logo%20callmed%201.PNG" alt="Ícone" class="mr-2 w-100 h-20">Tabela Treinamentos
     </h1>
   </header>
@@ -106,6 +125,13 @@
           </select>
         </div>
 
+        <div>
+          <label for="filterFinalizada" class="text-sm block">Realizado:</label>
+          <select id="filterFinalizada" class="select-mini">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
         <button id="clearFilters" class="px-3 py-1 border border-blue-500 rounded-lg hover:bg-blue-50 text-blue-600 text-sm self-end">Limpar Filtros</button>
       </div>
 
@@ -124,7 +150,8 @@
     </div>
 
     <div id="tabDashboardContent" class="hidden bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4">Dashboard de Treinamentos e Progresso</h2>
+      <h2 class="text-xl font-semibold mb-4 font-poppins">Dashboard de Treinamentos e Progresso</h2>
+
       <div class="flex flex-wrap gap-8 justify-center">
         <div class="w-full sm:w-1/2 lg:w-1/4 p-2 border rounded-lg shadow-inner">
             <h3 class="text-lg font-medium mb-2 text-center">Progresso Treinamento</h3>
@@ -168,16 +195,15 @@
 
     const filterTreinamentoEl = document.getElementById('filterTreinamento');
     const filterRespEl = document.getElementById('filterResp');
+    const filterFinalizadaEl = document.getElementById('filterFinalizada');
     const clearFiltersBtn = document.getElementById('clearFilters');
 
-    // 1. ESTRUTURA DE COLUNAS ATUALIZADA
     let columns = [
       { key: 'unidade', label: 'Unidade', type: 'select', width: 80, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e do Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro' },
       { key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 90, options: 'UBS,UPA,Hospital' },
       { key: 'dtinicio', label: 'Data Início', type: 'date', width: 120 },
       { key: 'dtfim', label: 'Data Fim', type: 'date', width: 120 },
-      // NOVA COLUNA "TEMPO"
-      { key: 'tempo', label: 'Tempo(Dias)', type: 'display', width: 50 },
+      { key: 'tempo', label: 'Tempo (Dias)', type: 'display', width: 70 },
       { key: 'treinamento', label: 'Treinamento', type: 'select', width: 40, options: 'Ok,Pendente' },
       { key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
       { key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
@@ -195,7 +221,7 @@
     function tdBase(w) { const td = document.createElement('td'); td.className = 'border-t'; td.style.minWidth = w + 'px'; return td; }
 
 
-    // 2. FUNÇÃO DE CÁLCULO DE TEMPO
+    // FUNÇÃO DE CÁLCULO DE TEMPO
     function calculateTime(row) {
         if (row.dtinicio && row.dtfim) {
             const start = new Date(row.dtinicio);
@@ -212,6 +238,28 @@
         }
     }
 
+    // FUNÇÃO: ORDENAR POR DATA INÍCIO (Crescente)
+    function sortRowsByDate() {
+        rows.sort((a, b) => {
+            const dateA = a.dtinicio ? new Date(a.dtinicio) : null;
+            const dateB = b.dtinicio ? new Date(b.dtinicio) : null;
+
+            if (dateA && dateB) {
+                return dateA - dateB;
+            }
+
+            if (dateA && !dateB) {
+                return -1;
+            }
+
+            if (!dateA && dateB) {
+                return 1;
+            }
+
+            return 0;
+        });
+    }
+
 
     function renderHead() {
       const tr = document.getElementById('thead');
@@ -225,9 +273,11 @@
       });
     }
 
+    // FUNÇÃO DE FILTRO ATUALIZADA
     function applyFilters() {
         const filterTreinamento = filterTreinamentoEl.value;
         const filterResp = filterRespEl.value;
+        const filterFinalizada = filterFinalizadaEl.value;
 
         let filteredRows = rows;
 
@@ -239,6 +289,10 @@
             filteredRows = filteredRows.filter(row => row.resp === filterResp);
         }
 
+        if (filterFinalizada) {
+            filteredRows = filteredRows.filter(row => row.finalizada === filterFinalizada);
+        }
+
         return filteredRows;
     }
 
@@ -246,10 +300,12 @@
       const tb = document.getElementById('tbody');
       tb.innerHTML = '';
 
+      // Ordena antes de filtrar
+      sortRowsByDate();
+
       const rowsToRender = applyFilters();
 
       rowsToRender.forEach((row, i) => {
-        // Garante que o cálculo de tempo seja feito antes de renderizar
         calculateTime(row);
 
         const tr = document.createElement('tr');
@@ -263,23 +319,21 @@
             const inp = document.createElement('input');
             inp.className = 'px-2 py-1 border rounded-lg w-full';
             inp.value = row[col.key] || '';
-            inp.oninput = () => { row[col.key] = inp.value; persist(); updateDashboardData(); };
+            inp.oninput = () => { row[col.key] = inp.value; persist(); renderRows(); };
             td.appendChild(inp);
           } else if (col.type === 'date') {
             const inp = document.createElement('input');
             inp.type = 'date';
             inp.className = 'px-2 py-1 border rounded-lg w-full';
             inp.value = row[col.key] || '';
-            // Atualiza a lógica de oninput para recalcular o tempo
             inp.oninput = () => {
                 row[col.key] = inp.value;
                 calculateTime(row);
                 persist();
-                renderRows(); // Renderiza novamente para atualizar o campo 'Tempo'
+                renderRows();
             };
             td.appendChild(inp);
           } else if (col.type === 'display') {
-            // Nova lógica para exibir o campo "Tempo" (somente leitura)
             const span = document.createElement('span');
             span.textContent = row[col.key] || '-';
             span.className = 'px-2 py-1 block w-full font-semibold';
@@ -295,7 +349,7 @@
               sel.appendChild(op);
             });
             sel.value = row[col.key] || '';
-            sel.onchange = () => { row[col.key] = sel.value; persist(); updateDashboardData(); };
+            sel.onchange = () => { row[col.key] = sel.value; persist(); renderRows(); };
             sel.classList.add('select-mini');
             td.appendChild(sel);
           } else if (col.type === 'actions') {
@@ -354,12 +408,25 @@
             });
         }
 
+        const finalizadaCol = columns.find(c => c.key === 'finalizada');
+        if (finalizadaCol) {
+            const options = finalizadaCol.options.split(',').map(s => s.trim()).filter(Boolean);
+            options.forEach(option => {
+                const op = document.createElement('option');
+                op.value = option;
+                op.textContent = option;
+                filterFinalizadaEl.appendChild(op);
+            });
+        }
+
         filterTreinamentoEl.onchange = renderRows;
         filterRespEl.onchange = renderRows;
+        filterFinalizadaEl.onchange = renderRows;
 
         clearFiltersBtn.onclick = () => {
             filterTreinamentoEl.value = '';
             filterRespEl.value = '';
+            filterFinalizadaEl.value = '';
             renderRows();
         };
     }
@@ -367,44 +434,37 @@
     function updateDashboardData() {
         const total = rows.length;
 
-        // DADOS DE TREINAMENTO (Bloco 1)
         const treinamentoOk = rows.filter(row => row.treinamento === "Ok").length;
         const treinamentoPendente = rows.filter(row => row.treinamento === "Pendente").length;
         const percentualOk = total === 0 ? 0 : (treinamentoOk / total) * 100;
         const percentualPendente = total === 0 ? 0 : (treinamentoPendente / total) * 100;
 
-        // DADOS DE ACOMPANHAMENTO (Bloco 2)
         const acompanhamentoRealizado = rows.filter(row => row.acompanhamento === "Realizado").length;
         const acompanhamentoNaoRealizado = rows.filter(row => row.acompanhamento === "Não Realizado").length;
         const percentualRealizado = total === 0 ? 0 : (acompanhamentoRealizado / total) * 100;
         const percentualNaoRealizado = total === 0 ? 0 : (acompanhamentoNaoRealizado / total) * 100;
 
-        // DADOS DE FINALIZADA (Bloco 3)
         const finalizadaSim = rows.filter(row => row.finalizada === "Sim").length;
         const finalizadaNao = rows.filter(row => row.finalizada === "Não").length;
         const percentualSim = total === 0 ? 0 : (finalizadaSim / total) * 100;
         const percentualNao = total === 0 ? 0 : (finalizadaNao / total) * 100;
 
 
-        // Atualiza Textos Bloco 1 (Treinamento)
         document.getElementById("progressTreinamentoPercentOk").textContent = percentualOk.toFixed(2);
         document.getElementById("progressTreinamentoPercentPendente").textContent = percentualPendente.toFixed(2);
         document.getElementById("progressTreinamentoCountOk").textContent = treinamentoOk;
         document.getElementById("progressTreinamentoCountTotal").textContent = total;
 
-        // Atualiza Textos Bloco 2 (Acompanhamento)
         document.getElementById("progressAcompanhamentoPercentRealizado").textContent = percentualRealizado.toFixed(2);
         document.getElementById("progressAcompanhamentoPercentNaoRealizado").textContent = percentualNaoRealizado.toFixed(2);
         document.getElementById("progressAcompanhamentoCountRealizado").textContent = acompanhamentoRealizado;
         document.getElementById("progressAcompanhamentoCountTotal").textContent = total;
 
-        // Atualiza Textos Bloco 3 (Finalizada)
         document.getElementById("progressFinalizadaPercentSim").textContent = percentualSim.toFixed(2);
         document.getElementById("progressFinalizadaPercentNao").textContent = percentualNao.toFixed(2);
         document.getElementById("progressFinalizadaCountSim").textContent = finalizadaSim;
         document.getElementById("progressFinalizadaCountTotal").textContent = total;
 
-        // Atualiza os gráficos
         const tabDashboardContent = document.getElementById('tabDashboardContent');
         if (!tabDashboardContent.classList.contains('hidden')) {
             updateProgressTreinamentoChart(treinamentoOk, treinamentoPendente);
@@ -534,7 +594,6 @@
     // =======================================================
 
     function createDownloadLink(content, type, extension) {
-        // Byte Order Mark (BOM) para melhor suporte a acentuação no Excel
         const BOM = "\uFEFF";
         const blob = new Blob([BOM, content], { type: type });
         const url = URL.createObjectURL(blob);
@@ -550,10 +609,8 @@
         URL.revokeObjectURL(url);
     }
 
-    // Prepara os dados no formato CSV/XLS
     function prepareData(separator) {
         const rowsToExport = applyFilters();
-        // 3. Garante que o cálculo de tempo seja feito para o download
         rowsToExport.forEach(calculateTime);
 
         const exportableColumns = columns.filter(c => c.key !== 'acoes');
@@ -563,7 +620,6 @@
         const csvRows = rowsToExport.map(row =>
             exportableColumns.map(col => {
                 let value = row[col.key] || '';
-                // Escape aspas duplas, e coloque aspas se o valor contiver o separador, aspas ou quebra de linha.
                 value = String(value).replace(/"/g, '""');
                 if (value.includes(separator) || value.includes('"') || value.includes('\n')) {
                     value = `"${value}"`;
@@ -575,19 +631,16 @@
         return [headers, ...csvRows].join('\n');
     }
 
-    // 1. EXPORTAR PARA CSV (Vírgula)
     function exportToCsv() {
-        const content = prepareData(','); // Vírgula como separador
+        const content = prepareData(',');
         createDownloadLink(content, 'text/csv;charset=utf-8;', 'csv');
     }
 
-    // 2. EXPORTAR PARA EXCEL (Ponto e Vírgula)
     function exportToExcel() {
-        const content = prepareData(';'); // Ponto e vírgula como separador (Melhor para Excel Brasil)
+        const content = prepareData(';');
         createDownloadLink(content, 'application/vnd.ms-excel;charset=utf-8;', 'xls');
     }
 
-    // 3. EXPORTAR PARA PDF (Usando jsPDF-autotable)
     function exportToPDF() {
         if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
              alert('A biblioteca jsPDF não foi carregada. Verifique sua conexão e as tags <script> no <head>.');
@@ -595,9 +648,9 @@
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'pt', 'a4'); // 'l' para Paisagem
+        const doc = new jsPDF('l', 'pt', 'a4');
         const rowsToExport = applyFilters();
-        rowsToExport.forEach(calculateTime); // Garante cálculo no PDF
+        rowsToExport.forEach(calculateTime);
 
         const exportableColumns = columns.filter(c => c.key !== 'acoes');
         const head = [exportableColumns.map(c => c.label)];
@@ -613,11 +666,9 @@
             styles: { fontSize: 8, cellPadding: 4, halign: 'center' },
             headStyles: { fillColor: [59, 130, 246] },
             didDrawPage: function (data) {
-                // Título
                 doc.setFontSize(14);
                 doc.text("Tabela de Treinamentos - MEEDS MACAÉ", data.settings.margin.left, 30);
 
-                // Rodapé
                 doc.setFontSize(8);
                 const pageCount = doc.internal.getNumberOfPages();
                 doc.text(`Página ${data.pageNumber} de ${pageCount}`, doc.internal.pageSize.width - data.settings.margin.right, doc.internal.pageSize.height - 10);
@@ -628,7 +679,7 @@
     }
 
     // =======================================================
-    // LÓGICA DO MENU DROPDOWN E ASSOCIAÇÕES
+    // LÓGICA DO MENU DROPDOWN E ABAS (TABS)
     // =======================================================
     const downloadButton = document.getElementById('downloadButton');
     const downloadMenu = document.getElementById('downloadMenu');
@@ -636,38 +687,32 @@
     const exportXlsBtn = document.getElementById('exportXlsBtn');
     const exportPdfBtn = document.getElementById('exportPdfBtn');
 
-    // Alterna a visibilidade do menu
     downloadButton.onclick = (e) => {
         e.stopPropagation();
         downloadMenu.classList.toggle('hidden');
     };
 
-    // Fecha o menu se clicar fora
     document.addEventListener('click', (e) => {
         if (downloadMenu && !downloadMenu.contains(e.target) && !downloadButton.contains(e.target)) {
             downloadMenu.classList.add('hidden');
         }
     });
 
-    // Associa as funções aos botões do menu
     exportCsvBtn.onclick = (e) => { e.preventDefault(); exportToCsv(); downloadMenu.classList.add('hidden'); };
     exportXlsBtn.onclick = (e) => { e.preventDefault(); exportToExcel(); downloadMenu.classList.add('hidden'); };
     exportPdfBtn.onclick = (e) => { e.preventDefault(); exportToPDF(); downloadMenu.classList.add('hidden'); };
 
-    // LÓGICA DE ABAS (TABS)
     const tabPrincipal = document.getElementById('tabPrincipal');
     const tabDashboard = document.getElementById('tabDashboard');
     const tabPrincipalContent = document.getElementById('tabPrincipalContent');
     const tabDashboardContent = document.getElementById('tabDashboardContent');
 
     function showTab(tabName) {
-        // Estilos dos botões de aba
         [tabPrincipal, tabDashboard].forEach(tab => {
             tab.classList.remove('bg-white', 'shadow-sm', 'font-semibold');
             tab.classList.add('bg-gray-50');
         });
 
-        // Esconde os conteúdos
         [tabPrincipalContent, tabDashboardContent].forEach(content => {
             content.classList.add('hidden');
         });
@@ -690,7 +735,6 @@
 
     document.getElementById('addRow').onclick = () => { rows.push({}); persist(); renderRows(); };
 
-    // FUNÇÃO APAGAR TUDO
     document.getElementById('clr').onclick = () => {
       const senha = prompt("🚨 Digite a senha para APAGAR TODOS os dados:");
       if (senha === "1") {
