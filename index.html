@@ -46,6 +46,84 @@
             width: 100%;
             padding: 0 0.5rem; /* Padding para as listas de status */
         }
+        /* Estilos do Calendário Mensal */
+        .calendar-month-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        .calendar-month-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .calendar-weekday-header {
+            background-color: #3B82F6;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid #2563EB;
+            font-size: 0.875rem;
+        }
+        .calendar-week-row {
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .calendar-day-cell-empty {
+            background-color: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            min-height: 100px;
+            height: 100px;
+        }
+        .calendar-day-cell-month {
+            border: 1px solid #E5E7EB;
+            min-height: 100px;
+            height: 100px;
+            vertical-align: top;
+            padding: 0.5rem;
+            background-color: white;
+            position: relative;
+        }
+        .calendar-day-number {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        .calendar-day-events {
+            display: flex;
+            flex-direction: column; /* Para empilhar os nomes das unidades */
+            gap: 0.1rem; /* Espaçamento menor entre os badges */
+            margin-top: 0.25rem;
+        }
+        .calendar-event-badge {
+            padding: 0.1rem 0.25rem; /* Padding menor */
+            border-radius: 4px;
+            font-size: 0.65rem; /* Fonte menor para caber o nome */
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: block; /* Ocupar a largura total da célula */
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis; /* Para cortar nomes longos */
+        }
+        .calendar-event-badge:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .event-ok {
+            background-color: #10B981;
+            color: white;
+        }
+        .event-pendente {
+            background-color: #FCD34D;
+            color: #78350F;
+        }
+        .event-andamento {
+            background-color: #3B82F6;
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-blue-50 font-sans">
@@ -127,9 +205,11 @@
         </div>
 
         <div class="flex border-b border-gray-200 mb-4">
-            <button id="tabPrincipal" class="py-2 px-4 -mb-px text-sm text-blue-800 border-t border-l border-r rounded-t-lg transition duration-150 bg-red-100 hover:bg-blue-200 font-semibold"> Tabela de Processos
+            <button id="tabPrincipal" class="py-2 px-4 -mb-px text-sm text-blue-800 border-t border-l border-r rounded-t-lg transition duration-150 bg-blue-100 hover:bg-blue-200 font-semibold"> Tabela de Processos
             </button>
             <button id="tabDashboard" class="py-2 px-4 -mb-px text-sm border-t border-l border-r rounded-t-lg transition duration-150 bg-indigo-600 text-white shadow-md"> Dashboard de Status
+            </button>
+            <button id="tabCalendario" class="py-2 px-4 -mb-px text-sm border-t border-l border-r rounded-t-lg transition duration-150 bg-gray-100 text-gray-700 hover:bg-gray-200"> Calendário
             </button>
         </div>
 
@@ -255,6 +335,16 @@
 
                 </div>
             </div>
+
+            <div id="tabCalendarioContent" class="hidden">
+                <h2 class="text-2xl font-bold text-indigo-700 mb-6">Calendário de Planejamento</h2>
+                <div class="mb-4 text-sm text-gray-600">
+                    <p>Visualização do planejamento das unidades com base nas datas de início e fim.</p>
+                </div>
+                <div id="calendarioView" class="overflow-x-auto">
+                    <!-- O calendário será renderizado aqui -->
+                </div>
+            </div>
         </div>
 
     </div>
@@ -282,7 +372,7 @@
           { key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
           { key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
           { key: 'finalizada', label: 'FINALIZADA', type: 'select', width: 40, options: 'Sim ,Não' },
-          { key: 'plotagem', label: 'Plotagem', type: 'select', width: 60, options: 'Realizado, Aguardando, Pendente' },
+          { key: 'plotagem', label: 'Plotagem', type: 'select', width: 50, options: 'Realizado, Aguardando, Pendente' },
           { key: 'acoes', label: 'Ações', type: 'actions', width: 80 }
         ];
 
@@ -804,6 +894,138 @@
         }
 
         // =======================================================
+        // FUNÇÃO DE RENDERIZAÇÃO DO CALENDÁRIO
+        // =======================================================
+
+        function renderCalendar() {
+            const calendarioView = document.getElementById('calendarioView');
+
+            // Filtrar apenas linhas com datas válidas
+            const validRows = rows.filter(row => row.dtinicio && row.dtfim);
+
+            if (validRows.length === 0) {
+                calendarioView.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhum registro com datas de início e fim encontrado.</div>';
+                return;
+            }
+
+            // Encontrar a data mínima e máxima
+            let minDate = new Date(validRows[0].dtinicio);
+            let maxDate = new Date(validRows[0].dtfim);
+
+            validRows.forEach(row => {
+                const inicio = new Date(row.dtinicio);
+                const fim = new Date(row.dtfim);
+                if (inicio < minDate) minDate = inicio;
+                if (fim > maxDate) maxDate = fim;
+            });
+
+            // Agrupar eventos por mês
+            const monthsToRender = [];
+            const currentMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            const endMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+
+            while (currentMonth <= endMonth) {
+                monthsToRender.push(new Date(currentMonth));
+                currentMonth.setMonth(currentMonth.getMonth() + 1);
+            }
+
+            let html = '';
+
+            // Renderizar cada mês
+            monthsToRender.forEach(monthDate => {
+                const year = monthDate.getFullYear();
+                const month = monthDate.getMonth();
+                const monthName = monthDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+                // Cabeçalho do mês
+                html += '<div class="mb-8">';
+                html += `<h3 class="text-xl font-bold text-indigo-700 mb-4 capitalize">${monthName}</h3>`;
+                html += '<div class="calendar-month-container">';
+                html += '<table class="calendar-month-table">';
+
+                // Cabeçalho dos dias da semana
+                html += '<thead><tr>';
+                const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                diasSemana.forEach(dia => {
+                    html += `<th class="calendar-weekday-header">${dia}</th>`;
+                });
+                html += '</tr></thead>';
+
+                // Corpo do calendário
+                html += '<tbody>';
+
+                // Primeiro dia do mês e último dia do mês
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const firstDayOfWeek = firstDay.getDay(); // 0 = Domingo
+                const totalDays = lastDay.getDate();
+
+                let dayCounter = 1;
+                let weekRow = 0;
+
+                // Renderizar semanas
+                while (dayCounter <= totalDays) {
+                    html += '<tr class="calendar-week-row">';
+
+                    // Renderizar 7 dias (domingo a sábado)
+                    for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                        // Células vazias antes do primeiro dia
+                        if (weekRow === 0 && dayOfWeek < firstDayOfWeek) {
+                            html += '<td class="calendar-day-cell-empty"></td>';
+                        }
+                        // Células vazias depois do último dia
+                        else if (dayCounter > totalDays) {
+                            html += '<td class="calendar-day-cell-empty"></td>';
+                        }
+                        // Células com dias válidos
+                        else {
+                            const currentDate = new Date(year, month, dayCounter);
+                            const dateStr = currentDate.toISOString().split('T')[0];
+
+                            html += '<td class="calendar-day-cell-month">';
+                            html += `<div class="calendar-day-number">${dayCounter}</div>`;
+                            html += '<div class="calendar-day-events">';
+
+                            // Verificar quais unidades têm eventos neste dia
+                            validRows.forEach(row => {
+                                if (dateStr >= row.dtinicio && dateStr <= row.dtfim) {
+                                    const eventClass = row.treinamento === 'Ok' ? 'event-ok' :
+                                                     row.treinamento === 'Pendente' ? 'event-pendente' : 'event-andamento';
+
+                                    // Substituir o ícone pelo nome da unidade
+                                    const label = row.unidade || 'Unidade Sem Nome';
+
+                                    html += `<div class="calendar-event-badge ${eventClass}" title="${row.unidade} - ${row.treinamento}">${label}</div>`;
+                                }
+                            });
+
+                            html += '</div>';
+                            html += '</td>';
+
+                            dayCounter++;
+                        }
+                    }
+
+                    html += '</tr>';
+                    weekRow++;
+                }
+
+                html += '</tbody></table>';
+                html += '</div>';
+                html += '</div>';
+            });
+
+            // Adicionar legenda
+            html += '<div class="mt-6 flex gap-4 justify-center text-sm flex-wrap">';
+            html += '<div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded" style="background-color: #10B981;"></span><span>Concluído (Ok)</span></div>';
+            html += '<div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded" style="background-color: #FCD34D;"></span><span>Pendente</span></div>';
+            html += '<div class="flex items-center gap-2"><span class="inline-block w-4 h-4 rounded" style="background-color: #3B82F6;"></span><span>Em Andamento</span></div>';
+            html += '</div>';
+
+            calendarioView.innerHTML = html;
+        }
+
+        // =======================================================
         // LÓGICA DE ABAS E EVENTOS
         // =======================================================
 
@@ -830,16 +1052,18 @@
 
         const tabPrincipal = document.getElementById('tabPrincipal');
         const tabDashboard = document.getElementById('tabDashboard');
+        const tabCalendario = document.getElementById('tabCalendario');
         const tabPrincipalContent = document.getElementById('tabPrincipalContent');
         const tabDashboardContent = document.getElementById('tabDashboardContent');
+        const tabCalendarioContent = document.getElementById('tabCalendarioContent');
 
         function showTab(tabName) {
-            [tabPrincipal, tabDashboard].forEach(tab => {
+            [tabPrincipal, tabDashboard, tabCalendario].forEach(tab => {
                 tab.classList.remove('bg-white', 'shadow-sm', 'font-semibold', 'text-white', 'bg-indigo-600', 'shadow-md');
                 tab.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
             });
 
-            [tabPrincipalContent, tabDashboardContent].forEach(content => {
+            [tabPrincipalContent, tabDashboardContent, tabCalendarioContent].forEach(content => {
                 content.classList.add('hidden');
             });
 
@@ -853,11 +1077,17 @@
                 tabDashboard.classList.add('bg-indigo-600', 'shadow-md', 'text-white');
                 tabDashboard.classList.remove('bg-gray-100', 'hover:bg-gray-200');
                 updateDashboardData();
+            } else if (tabName === 'calendario') {
+                tabCalendarioContent.classList.remove('hidden');
+                tabCalendario.classList.add('bg-white', 'shadow-sm', 'font-semibold', 'text-gray-700');
+                tabCalendario.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                renderCalendar();
             }
         }
 
         tabPrincipal.onclick = () => showTab('principal');
         tabDashboard.onclick = () => showTab('dashboard');
+        tabCalendario.onclick = () => showTab('calendario');
 
         document.getElementById('addRow').onclick = () => {
             rows.push({ plotagem: 'Aguardando' });
@@ -887,4 +1117,3 @@
     </script>
 </body>
 </html>
-
