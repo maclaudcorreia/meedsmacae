@@ -1,734 +1,889 @@
-<!doctype html>
-<html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>MEEDS MACAÉ</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
-  <style>
-    /* Configuração do Tailwind para reconhecer a fonte: */
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            poppins: ['Poppins', 'sans-serif'],
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEEDS - Controle Operacional v4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* Estilo básico para a tabela e elementos */
+        .select-mini {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem; /* Texto menor */
+            height: 1.75rem; /* Altura reduzida */
         }
-      }
-    }
-
-    /* UI geral */
-    ::-webkit-scrollbar { height: 8px; width: 8px; }
-    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 8px; }
-
-    /* Cabeçalho da tabela */
-    thead th { position: sticky; top: 0; background: #ffffff; z-index: 2; box-shadow: 0 1px 0 #e5e7eb; }
-
-    /* Estilos dos filtros */
-    .select-mini {
-        padding: .25rem .5rem;
-        border: 1px solid #3b82f6; /* Blue-500 */
-        border-radius: .5rem;
-        background: #fff; /* Fundo branco */
-    }
-
-    /* Estilos dos gráficos - IDs unificados */
-    #progressTreinamentoChart, #progressAcompanhamentoChart, #progressFinalizadaChart {
-      max-width: 300px; /* Largura máxima */
-      max-height: 300px; /* Altura máxima */
-      width: 100%;
-      height: auto;
-      margin: 0 auto; /* Centraliza o canvas DENTRO da sua div pai */
-    }
-
-    /* Cor de fundo do body */
-    body {
-        background-color: #f0f8ff; /* Cor azul bem clara */
-        color: #1f2937; /* Cor de texto padrão */
-    }
-  </style>
+        .table-container {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        #dataTable th, #dataTable td {
+            white-space: nowrap; /* Previne quebra de linha em células */
+        }
+        /* Corrigindo o layout do card para evitar sobreposição */
+        .dashboard-card-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dashboard-chart-area {
+            position: relative;
+            width: 150px; /* Tamanho fixo para o gráfico */
+            height: 150px;
+            margin-bottom: 1rem;
+        }
+        .dashboard-chart-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .dashboard-stats-list {
+            width: 100%;
+            padding: 0 0.5rem; /* Padding para as listas de status */
+        }
+    </style>
 </head>
-<body class="text-gray-800">
-  <header class="px-6 py-4 border-b bg-white text-center">
-    <h1 class="text-2xl font-bold font-poppins inline-flex items-center justify-center">
-      <img src="logo%20callmed%201.PNG" alt="Ícone" class="mr-2 w-100 h-20">Tabela Treinamentos
-    </h1>
-  </header>
+<body class="bg-blue-50 font-sans">
 
-  <main class="max-w-7xl mx-auto mt-6">
-    <div class="flex mb-3">
-      <button id="tabPrincipal" class="px-3 py-1 border rounded-lg hover:bg-gray-100">Aba Principal</button>
-      <button id="tabDashboard" class="px-3 py-1 border rounded-lg hover:bg-gray-100 ml-2">Dashboard</button>
-      </div>
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
 
-    <div id="tabPrincipalContent">
-      <div class="flex flex-wrap gap-2 mb-3">
-        <button id="addRow" class="px-3 py-1 rounded-lg text-white bg-green-500 hover:bg-green-600">
-            Nova linha
-        </button>
+        <div class="bg-white shadow-xl rounded-xl p-4 mb-6 border border-blue-200">
 
-        <div class="relative inline-block text-left">
-          <button id="downloadButton" class="px-3 py-1 rounded-lg text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 inline-flex items-center">
-            Download
-            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </button>
-
-          <div id="downloadMenu" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
-            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="downloadButton">
-              <a href="#" id="exportCsvBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                Exportar CSV
-              </a>
-              <a href="#" id="exportXlsBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                Exportar XLS
-              </a>
-              <a href="#" id="exportPdfBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                Exportar PDF
-              </a>
+            <div class="flex items-center mb-4">
+                <img src="logo%20callmed%201.PNG" alt="Logo da Empresa" class="h-20 mr-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-indigo-700 mb-0">MEEDS - Controle Operacional</h1>
+                    <p class="text-gray-600">Monitoramento de Processos Operacionais por Unidade.</p>
+                </div>
             </div>
-          </div>
+
+            <div class="flex flex-wrap gap-3 justify-between items-center mt-4 border-t pt-4 border-gray-200">
+
+                <div class="flex gap-3">
+                    <button id="addRow" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 flex items-center text-sm">
+                        + Nova Linha
+                    </button>
+                    <button id="clr" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 flex items-center text-sm">
+                        Limpar Tudo 🗑️
+                    </button>
+                </div>
+
+
+                <div class="relative inline-block text-left">
+                    <div>
+                        <button type="button" id="downloadButton" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-expanded="true" aria-haspopup="true">
+                            Exportar Dados
+                            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="downloadMenu" class="hidden origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <a href="#" id="exportCsvBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" tabindex="-1">CSV (Vírgula)</a>
+                            <a href="#" id="exportXlsBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" tabindex="-1">Excel (Ponto e Vírgula)</a>
+                            <a href="#" id="exportPdfBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem" tabindex="-1">PDF</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Filtros Rápidos:</h3>
+                <div class="flex flex-wrap gap-4 mb-3 items-end">
+
+                    <div>
+                        <label for="filterTreinamento" class="text-sm block">Treinamento:</label>
+                        <select id="filterTreinamento" class="select-mini border rounded-lg border-blue-200">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="filterResp" class="text-sm block">Responsáveis:</label>
+                        <select id="filterResp" class="select-mini border rounded-lg border-blue-200">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="filterFinalizada" class="text-sm block">Finalizada:</label>
+                        <select id="filterFinalizada" class="select-mini border rounded-lg border-blue-200">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+
+                    <button id="clearFilters" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-bold py-1.5 px-3 rounded-lg transition duration-150 mt-3 sm:mt-0 border border-blue-300">
+                        Limpar Filtros
+                    </button>
+                </div>
+            </div>
         </div>
-        <button id="clr" class="px-3 py-1 rounded-lg text-white bg-red-600 hover:bg-red-700 ml-auto">
-            Apagar Tudo
-        </button>
-      </div>
 
-      <div class="flex flex-wrap gap-4 mb-3 p-4 bg-white rounded-lg shadow-md border">
-        <label class="font-semibold text-gray-700 self-center">Filtros:</label>
-
-        <div>
-          <label for="filterTreinamento" class="text-sm block">Treinamento:</label>
-          <select id="filterTreinamento" class="select-mini">
-            <option value="">Todos</option>
-          </select>
+        <div class="flex border-b border-gray-200 mb-4">
+            <button id="tabPrincipal" class="py-2 px-4 -mb-px text-sm text-blue-800 border-t border-l border-r rounded-t-lg transition duration-150 bg-red-100 hover:bg-blue-200 font-semibold"> Tabela de Processos
+            </button>
+            <button id="tabDashboard" class="py-2 px-4 -mb-px text-sm border-t border-l border-r rounded-t-lg transition duration-150 bg-indigo-600 text-white shadow-md"> Dashboard de Status
+            </button>
         </div>
 
-        <div>
-          <label for="filterResp" class="text-sm block">Responsáveis:</label>
-          <select id="filterResp" class="select-mini">
-            <option value="">Todos</option>
-          </select>
+
+        <div class="bg-white shadow-xl rounded-xl p-6 border border-blue-200">
+
+            <div id="tabPrincipalContent">
+                <div class="table-container shadow-md rounded-lg border border-blue-200">
+                    <table class="min-w-full divide-y divide-gray-200" id="dataTable">
+                        <thead class="bg-blue-50">
+                            <tr id="thead">
+                                </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="tbody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tabDashboardContent" class="hidden">
+                <h2 class="text-2xl font-bold text-indigo-700 mb-6">Visão Geral dos Processos</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                    <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+                        <h3 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Treinamento</h3>
+                        <div class="dashboard-card-content w-full">
+                            <div class="dashboard-chart-area">
+                                <canvas id="progressTreinamentoChart"></canvas>
+                                <div class="dashboard-chart-center">
+                                    <span class="text-xl font-bold text-gray-800" id="progressTreinamentoCountTotal">0</span>
+                                    <span class="text-xs text-gray-500">Total</span>
+                                </div>
+                            </div>
+                            <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+                                <p class="flex justify-between text-blue-600 items-center">
+                                    <span class="flex items-center">🟦 Em Andamento:</span>
+                                    <span><span id="progressTreinamentoPercentAndamento">0.00</span>%</span>
+                                </p>
+                                <p class="flex justify-between text-green-600 items-center">
+                                    <span class="flex items-center">✅ Concluído (Ok):</span>
+                                    <span><span id="progressTreinamentoPercentOk">0.00</span>% (<span id="progressTreinamentoCountOk">0</span>)</span>
+                                </p>
+                                <p class="flex justify-between text-yellow-600 items-center">
+                                    <span class="flex items-center">⚠️ Pendente:</span>
+                                    <span><span id="progressTreinamentoPercentPendente">0.00</span>%</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+                        <h3 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Acompanhamento</h3>
+                        <div class="dashboard-card-content w-full">
+                            <div class="dashboard-chart-area">
+                                <canvas id="progressAcompanhamentoChart"></canvas>
+                                <div class="dashboard-chart-center">
+                                    <span class="text-xl font-bold text-gray-800" id="progressAcompanhamentoCountTotal">0</span>
+                                    <span class="text-xs text-gray-500">Total</span>
+                                </div>
+                            </div>
+                            <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+                                <p class="flex justify-between text-yellow-600 items-center">
+                                    <span class="flex items-center">🟡 Realizado:</span>
+                                    <span><span id="progressAcompanhamentoPercentRealizado">0.00</span>% (<span id="progressAcompanhamentoCountRealizado">0</span>)</span>
+                                </p>
+                                <p class="flex justify-between text-red-600 items-center">
+                                    <span class="flex items-center">🔴 Não Realizado:</span>
+                                    <span><span id="progressAcompanhamentoPercentNaoRealizado">0.00</span>%</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+                        <h3 class="text-lg font-bold text-gray-700 mb-4 text-center">Status Finalizado</h3>
+                        <div class="dashboard-card-content w-full">
+                            <div class="dashboard-chart-area">
+                                <canvas id="progressFinalizadaChart"></canvas>
+                                <div class="dashboard-chart-center">
+                                    <span class="text-xl font-bold text-gray-800" id="progressFinalizadaCountTotal">0</span>
+                                    <span class="text-xs text-gray-500">Total</span>
+                                </div>
+                            </div>
+                            <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+                                <p class="flex justify-between text-blue-600 items-center">
+                                    <span class="flex items-center">🟦 Finalizada (Sim):</span>
+                                    <span><span id="progressFinalizadaPercentSim">0.00</span>% (<span id="progressFinalizadaCountSim">0</span>)</span>
+                                </p>
+                                <p class="flex justify-between text-gray-500 items-center">
+                                    <span class="flex items-center">⚪ Não Finalizada:</span>
+                                    <span><span id="progressFinalizadaPercentNao">0.00</span>%</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+                        <h3 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Plotagem</h3>
+                        <div class="dashboard-card-content w-full">
+                            <div class="dashboard-chart-area">
+                                <canvas id="progressPlotagemChart"></canvas>
+                                <div class="dashboard-chart-center">
+                                    <span class="text-xl font-bold text-gray-800" id="progressPlotagemCountTotal">0</span>
+                                    <span class="text-xs text-gray-500">Total</span>
+                                </div>
+                            </div>
+                            <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+                                <p class="flex justify-between text-green-600 items-center">
+                                    <span class="flex items-center">✅ Realizado:</span>
+                                    <span><span id="progressPlotagemPercentRealizado">0.00</span>% (<span id="progressPlotagemCountRealizado">0</span>)</span>
+                                </p>
+                                <p class="flex justify-between text-yellow-600 items-center">
+                                    <span class="flex items-center">🟡 Aguardando:</span>
+                                    <span><span id="progressPlotagemPercentAguardando">0.00</span>%</span>
+                                </p>
+                                <p class="flex justify-between text-gray-700 items-center">
+                                    <span class="flex items-center">⚫ Pendente:</span>
+                                    <span><span id="progressPlotagemPercentPendente">0.00</span>%</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
-        <div>
-          <label for="filterFinalizada" class="text-sm block">Realizado:</label>
-          <select id="filterFinalizada" class="select-mini">
-            <option value="">Todos</option>
-          </select>
-        </div>
-
-        <button id="clearFilters" class="px-3 py-1 border border-blue-500 rounded-lg hover:bg-blue-50 text-blue-600 text-sm self-end">Limpar Filtros</button>
-      </div>
-
-      <div class="table-responsive overflow-x-auto bg-white rounded-2xl shadow">
-        <table class="min-w-full border-collapse text-sm">
-          <thead>
-            <tr id="thead" class="bg-gray-100"></tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-
-      <p class="text-xs text-gray-500 mt-2 px-1">
-        Tudo é salvo **automaticamente** no seu navegador.
-      </p>
     </div>
 
-    <div id="tabDashboardContent" class="hidden bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4 font-poppins">Dashboard de Treinamentos e Progresso</h2>
+    <script>
+        const STORAGE = 'tabela_operacional_v4';
+        let progressTreinamentoChartInstance = null;
+        let progressAcompanhamentoChartInstance = null;
+        let progressFinalizadaChartInstance = null;
+        let progressPlotagemChartInstance = null;
 
-      <div class="flex flex-wrap gap-8 justify-center">
-        <div class="w-full sm:w-1/2 lg:w-1/4 p-2 border rounded-lg shadow-inner">
-            <h3 class="text-lg font-medium mb-2 text-center">Progresso Treinamento</h3>
-            <p class="text-center"><strong>OK: <span id="progressTreinamentoPercentOk"></span>%</strong></p>
-            <p class="text-center"><strong>Pendente: <span id="progressTreinamentoPercentPendente"></span>%</strong></p>
-            <p class="text-center"><strong>Em Andamento: <span id="progressTreinamentoPercentAndamento"></span>%</strong></p>
-            <div class="text-2xl font-bold mb-3 text-center">
-                <span id="progressTreinamentoCountOk" class="text-green-600">0</span> de <span id="progressTreinamentoCountTotal">0</span>
-            </div>
-            <canvas id="progressTreinamentoChart" width="300" height="300"></canvas>
-        </div>
+        const filterTreinamentoEl = document.getElementById('filterTreinamento');
+        const filterRespEl = document.getElementById('filterResp');
+        const filterFinalizadaEl = document.getElementById('filterFinalizada');
+        const filterPlotagemElContainer = document.createElement('div');
+        const clearFiltersBtn = document.getElementById('clearFilters');
 
-        <div class="w-full sm:w-1/2 lg:w-1/4 p-2 border rounded-lg shadow-inner">
-            <h3 class="text-lg font-medium mb-2 text-center">Progresso Acompanhamento</h3>
-            <p class="text-center"><strong>Realizado: <span id="progressAcompanhamentoPercentRealizado"></span>%</strong></p>
-            <p class="text-center"><strong>Não Realizado: <span id="progressAcompanhamentoPercentNaoRealizado"></span>%</strong></p>
-            <div class="text-2xl font-bold mb-3 text-center">
-                <span id="progressAcompanhamentoCountRealizado" class="text-yellow-600">0</span> de <span id="progressAcompanhamentoCountTotal">0</span>
-            </div>
-            <canvas id="progressAcompanhamentoChart" width="300" height="300"></canvas>
-        </div>
+        let columns = [
+          { key: 'unidade', label: 'Unidade', type: 'select', width: 80, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e do Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro' },
+          { key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 90, options: 'UBS,UPA,Hospital' },
+          { key: 'dtinicio', label: 'Data Início', type: 'date', width: 120 },
+          { key: 'dtfim', label: 'Data Fim', type: 'date', width: 120 },
+          { key: 'tempo', label: 'Tempo (Dias)', type: 'display', width: 70 },
+          { key: 'treinamento', label: 'Treinamento', type: 'select', width: 40, options: 'Ok,Pendente,Em Andamento' },
+          { key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
+          { key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
+          { key: 'finalizada', label: 'FINALIZADA', type: 'select', width: 40, options: 'Sim ,Não' },
+          { key: 'plotagem', label: 'Plotagem', type: 'select', width: 50, options: 'Realizado, Aguardando, Pendente' },
+          { key: 'acoes', label: 'Ações', type: 'actions', width: 80 }
+        ];
 
-        <div class="w-full sm:w-1/2 lg:w-1/4 p-2 border rounded-lg shadow-inner">
-            <h3 class="text-lg font-medium mb-2 text-center">Progresso Geral</h3>
-            <p class="text-center"><strong>SIM: <span id="progressFinalizadaPercentSim"></span>%</strong></p>
-            <p class="text-center"><strong>NÃO: <span id="progressFinalizadaPercentNao"></span>%</strong></p>
-            <div class="text-2xl font-bold mb-3 text-center">
-                <span id="progressFinalizadaCountSim" class="text-blue-600">0</span> de <span id="progressFinalizadaCountTotal">0</span>
-            </div>
-            <canvas id="progressFinalizadaChart" width="300" height="300"></canvas>
-        </div>
-      </div>
-    </div>
-
-    </main>
-
-  <script>
-    const STORAGE = 'tabela_operacional_v4';
-    let progressTreinamentoChartInstance = null;
-    let progressAcompanhamentoChartInstance = null;
-    let progressFinalizadaChartInstance = null;
-
-    const filterTreinamentoEl = document.getElementById('filterTreinamento');
-    const filterRespEl = document.getElementById('filterResp');
-    const filterFinalizadaEl = document.getElementById('filterFinalizada');
-    const clearFiltersBtn = document.getElementById('clearFilters');
-
-    let columns = [
-      { key: 'unidade', label: 'Unidade', type: 'select', width: 80, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e do Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro' },
-      { key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 90, options: 'UBS,UPA,Hospital' },
-      { key: 'dtinicio', label: 'Data Início', type: 'date', width: 120 },
-      { key: 'dtfim', label: 'Data Fim', type: 'date', width: 120 },
-      { key: 'tempo', label: 'Tempo (Dias)', type: 'display', width: 70 },
-      // ATUALIZAÇÃO: Adicionando 'Em Andamento' aqui.
-      { key: 'treinamento', label: 'Treinamento', type: 'select', width: 40, options: 'Ok,Pendente,Em Andamento' }, 
-      { key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
-      { key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
-      { key: 'finalizada', label: 'FINALIZADA', type: 'select', width: 40, options: 'Sim ,Não' },
-      { key: 'acoes', label: 'Ações', type: 'actions', width: 80 }
-    ];
-
-    let rows = JSON.parse(localStorage.getItem(STORAGE) || '[]');
-    if (!rows.length) {
-      rows = [];
-      persist();
-    }
-
-    function persist() { localStorage.setItem(STORAGE, JSON.stringify(rows)); }
-    function tdBase(w) { const td = document.createElement('td'); td.className = 'border-t'; td.style.minWidth = w + 'px'; return td; }
-
-    function calculateTime(row) {
-        if (row.dtinicio && row.dtfim) {
-            const start = new Date(row.dtinicio); 
-            const end = new Date(row.dtfim);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            row.tempo = diffDays + 1;
-        } else {
-            row.tempo = '';
+        let rows = JSON.parse(localStorage.getItem(STORAGE) || '[]');
+        if (!rows.length) {
+          rows = [
+              { unidade: 'UPA Barra', tipo: 'UPA', dtinicio: '2025-10-01', dtfim: '2025-10-15', treinamento: 'Ok', resp: 'Alan', acompanhamento: 'Realizado', finalizada: 'Sim', plotagem: 'Realizado' },
+              { unidade: 'UBS Novo Cavaleiros', tipo: 'UBS', dtinicio: '2025-10-10', dtfim: '', treinamento: 'Em Andamento', resp: 'Marcelo', acompanhamento: 'Não Realizado', finalizada: 'Não', plotagem: 'Aguardando' },
+              { unidade: 'HPMS - Hospital Serra', tipo: 'Hospital', dtinicio: '2025-11-01', dtfim: '2025-11-03', treinamento: 'Pendente', resp: 'Callmed', acompanhamento: 'Realizado', finalizada: 'Não', plotagem: 'Pendente' },
+          ];
+          persist();
         }
-    }
 
-    function sortRowsByDate() {
-        rows.sort((a, b) => {
-            const dateA = a.dtinicio ? new Date(a.dtinicio) : null;
-            const dateB = b.dtinicio ? new Date(b.dtinicio) : null;
-            if (dateA && dateB) return dateA - dateB;
-            if (dateA && !dateB) return -1;
-            if (!dateA && dateB) return 1;
-            return 0;
-        });
-    }
+        function persist() { localStorage.setItem(STORAGE, JSON.stringify(rows)); }
+        function tdBase(w) { const td = document.createElement('td'); td.className = 'border-t'; td.style.minWidth = w + 'px'; return td; }
 
-    function renderHead() {
-      const tr = document.getElementById('thead');
-      tr.innerHTML = '';
-      columns.forEach(c => {
-        const th = document.createElement('th');
-        th.textContent = c.label;
-        th.className = 'p-2 text-left font-semibold text-center';
-        th.style.minWidth = (c.width || 140) + 'px';
-        tr.appendChild(th);
-      });
-    }
-
-    function applyFilters() {
-        const filterTreinamento = filterTreinamentoEl.value;
-        const filterResp = filterRespEl.value;
-        const filterFinalizada = filterFinalizadaEl.value;
-
-        let filteredRows = rows;
-
-        if (filterTreinamento) {
-            filteredRows = filteredRows.filter(row => row.treinamento === filterTreinamento);
+        function calculateTime(row) {
+            if (row.dtinicio && row.dtfim) {
+                const start = new Date(row.dtinicio);
+                const end = new Date(row.dtfim);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                row.tempo = diffDays + 1;
+            } else {
+                row.tempo = '';
+            }
         }
-        if (filterResp) {
-            filteredRows = filteredRows.filter(row => row.resp === filterResp);
+
+        function sortRowsByDate() {
+            rows.sort((a, b) => {
+                const dateA = a.dtinicio ? new Date(a.dtinicio) : null;
+                const dateB = b.dtinicio ? new Date(b.dtinicio) : null;
+                if (dateA && dateB) return dateA - dateB;
+                if (dateA && !dateB) return -1;
+                if (!dateA && dateB) return 1;
+                return 0;
+            });
         }
-        if (filterFinalizada) {
-            filteredRows = filteredRows.filter(row => row.finalizada === filterFinalizada);
+
+        function renderHead() {
+          const tr = document.getElementById('thead');
+          tr.innerHTML = '';
+          columns.forEach(c => {
+            const th = document.createElement('th');
+            th.textContent = c.label;
+            th.className = 'p-2 text-left font-semibold text-center';
+            th.style.minWidth = (c.width || 140) + 'px';
+            tr.appendChild(th);
+          });
         }
-        return filteredRows;
-    }
 
-    function renderRows() {
-      const tb = document.getElementById('tbody');
-      tb.innerHTML = '';
-      sortRowsByDate();
-      const rowsToRender = applyFilters();
+        function applyFilters() {
+            const filterTreinamento = filterTreinamentoEl.value;
+            const filterResp = filterRespEl.value;
+            const filterFinalizada = filterFinalizadaEl.value;
+            const filterPlotagemElSelect = filterPlotagemElContainer.querySelector('select');
+            const filterPlotagem = filterPlotagemElSelect ? filterPlotagemElSelect.value : '';
 
-      rowsToRender.forEach((row, i) => {
-        calculateTime(row);
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50';
+            let filteredRows = rows;
 
-        columns.forEach(col => {
-          const td = tdBase(col.width);
-          td.classList.add('text-center');
+            if (filterTreinamento) {
+                filteredRows = filteredRows.filter(row => row.treinamento === filterTreinamento);
+            }
+            if (filterResp) {
+                filteredRows = filteredRows.filter(row => row.resp === filterResp);
+            }
+            if (filterFinalizada) {
+                filteredRows = filteredRows.filter(row => row.finalizada === filterFinalizada);
+            }
+            if (filterPlotagem) {
+                filteredRows = filteredRows.filter(row => row.plotagem === filterPlotagem);
+            }
+            return filteredRows;
+        }
 
-          if (col.type === 'date') {
-            const inp = document.createElement('input');
-            inp.type = 'date';
-            inp.className = 'px-2 py-1 border rounded-lg w-full';
-            inp.value = row[col.key] || '';
-            inp.oninput = () => {
-                row[col.key] = inp.value;
-                calculateTime(row);
-                persist();
+        function renderRows() {
+          const tb = document.getElementById('tbody');
+          tb.innerHTML = '';
+          sortRowsByDate();
+          const rowsToRender = applyFilters();
+
+          rowsToRender.forEach((row, i) => {
+            calculateTime(row);
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50';
+
+            columns.forEach(col => {
+              const td = tdBase(col.width);
+              td.classList.add('text-center');
+
+              if (col.type === 'date') {
+                const inp = document.createElement('input');
+                inp.type = 'date';
+                inp.className = 'px-2 py-1 border rounded-lg w-full';
+                inp.value = row[col.key] || '';
+                inp.oninput = () => {
+                    row[col.key] = inp.value;
+                    calculateTime(row);
+                    persist();
+                    renderRows();
+                };
+                td.appendChild(inp);
+              } else if (col.type === 'display') {
+                const span = document.createElement('span');
+                span.textContent = row[col.key] || '-';
+                span.className = 'px-2 py-1 block w-full font-semibold';
+                td.appendChild(span);
+
+              } else if (col.type === 'select') {
+                const sel = document.createElement('select');
+                sel.className = 'px-2 py-1 border rounded-lg bg-white w-full';
+                (col.options || '').split(',').map(s => s.trim()).filter(Boolean).forEach(o => {
+                  const op = document.createElement('option');
+                  op.value = o;
+                  op.textContent = o;
+                  sel.appendChild(op);
+                });
+                sel.value = row[col.key] || '';
+                sel.onchange = () => { row[col.key] = sel.value; persist(); renderRows(); };
+                sel.classList.add('select-mini');
+                td.appendChild(sel);
+              } else if (col.type === 'actions') {
+                const btn = document.createElement('button');
+                btn.innerHTML = '🗑️';
+                btn.title = 'Excluir linha';
+                btn.className = 'px-2 py-1 rounded-lg border hover:bg-red-50 hover:text-red-600';
+
+                btn.onclick = () => {
+                  const senha = prompt("Digite a senha para excluir esta linha:");
+                  if (senha === "1") {
+                    if (confirm('Tem certeza que deseja excluir esta linha?')) {
+                      const originalIndex = rows.findIndex(r => r === row);
+                      if (originalIndex !== -1) {
+                          rows.splice(originalIndex, 1);
+                          persist();
+                          renderRows();
+                      }
+                    }
+                  } else {
+                    alert("Senha incorreta!");
+                  }
+                };
+                td.appendChild(btn);
+              } else { // Trata 'text' e outros como input simples
+                const inp = document.createElement('input');
+                inp.className = 'px-2 py-1 border rounded-lg w-full';
+                inp.value = row[col.key] || '';
+                inp.oninput = () => { row[col.key] = inp.value; persist(); renderRows(); };
+                td.appendChild(inp);
+              }
+
+              tr.appendChild(td);
+            });
+
+            tb.appendChild(tr);
+          });
+
+          updateDashboardData();
+        }
+
+        function populateFilterOptions() {
+            const selectElements = [filterTreinamentoEl, filterRespEl, filterFinalizadaEl];
+            selectElements.forEach(select => {
+                select.innerHTML = '<option value="">Todos</option>';
+            });
+
+            filterPlotagemElContainer.className = 'filter-plotagem-container';
+            filterPlotagemElContainer.innerHTML = `
+                <label for="filterPlotagem" class="text-sm block">Plotagem:</label>
+                <select id="filterPlotagem" class="select-mini border rounded-lg">
+                    <option value="">Todos</option>
+                </select>
+            `;
+            const filterPlotagemElSelect = filterPlotagemElContainer.querySelector('select');
+
+
+            columns.forEach(col => {
+                if (col.type === 'select') {
+                    const targetEl = document.getElementById(`filter${col.key.charAt(0).toUpperCase() + col.key.slice(1)}`) || (col.key === 'plotagem' ? filterPlotagemElSelect : null);
+
+                    if (targetEl) {
+                        const options = col.options.split(',').map(s => s.trim()).filter(Boolean);
+                        options.forEach(option => {
+                            const op = document.createElement('option');
+                            op.value = option;
+                            op.textContent = option;
+                            targetEl.appendChild(op);
+                        });
+                    }
+                }
+            });
+
+            const filtersContainer = document.querySelector('.flex-wrap.gap-4.mb-3');
+            const clearFiltersButton = document.getElementById('clearFilters');
+            filtersContainer.insertBefore(filterPlotagemElContainer, clearFiltersButton);
+
+
+            filterTreinamentoEl.onchange = renderRows;
+            filterRespEl.onchange = renderRows;
+            filterFinalizadaEl.onchange = renderRows;
+            filterPlotagemElSelect.onchange = renderRows;
+
+
+            clearFiltersBtn.onclick = () => {
+                filterTreinamentoEl.value = '';
+                filterRespEl.value = '';
+                filterFinalizadaEl.value = '';
+                filterPlotagemElSelect.value = '';
                 renderRows();
             };
-            td.appendChild(inp);
-          } else if (col.type === 'display') {
-            const span = document.createElement('span');
-            span.textContent = row[col.key] || '-';
-            span.className = 'px-2 py-1 block w-full font-semibold';
-            td.appendChild(span);
+        }
 
-          } else if (col.type === 'select') {
-            const sel = document.createElement('select');
-            sel.className = 'px-2 py-1 border rounded-lg bg-white w-full';
-            (col.options || '').split(',').map(s => s.trim()).filter(Boolean).forEach(o => {
-              const op = document.createElement('option');
-              op.value = o;
-              op.textContent = o;
-              sel.appendChild(op);
-            });
-            sel.value = row[col.key] || '';
-            sel.onchange = () => { row[col.key] = sel.value; persist(); renderRows(); };
-            sel.classList.add('select-mini');
-            td.appendChild(sel);
-          } else if (col.type === 'actions') {
-            const btn = document.createElement('button');
-            btn.innerHTML = '🗑️';
-            btn.title = 'Excluir linha';
-            btn.className = 'px-2 py-1 rounded-lg border hover:bg-red-50 hover:text-red-600';
+        // NOVO: Função para atualizar o novo gráfico de Plotagem
+        function updateProgressPlotagemChart(realizadoCount, aguardandoCount, pendenteCount) {
+            const ctx = document.getElementById('progressPlotagemChart').getContext('2d');
 
-            btn.onclick = () => {
-              const senha = prompt("Digite a senha para excluir esta linha:");
-              if (senha === "1") {
-                if (confirm('Tem certeza que deseja excluir esta linha?')) {
-                  const originalIndex = rows.findIndex(r => r === row);
-                  if (originalIndex !== -1) {
-                      rows.splice(originalIndex, 1);
-                      persist();
-                      renderRows();
-                  }
-                }
-              } else {
-                alert("Senha incorreta!");
-              }
-            };
-            td.appendChild(btn);
-          } else { // Trata 'text' e outros como input simples
-            const inp = document.createElement('input');
-            inp.className = 'px-2 py-1 border rounded-lg w-full';
-            inp.value = row[col.key] || '';
-            inp.oninput = () => { row[col.key] = inp.value; persist(); renderRows(); };
-            td.appendChild(inp);
-          }
-
-          tr.appendChild(td);
-        });
-
-        tb.appendChild(tr);
-      });
-
-      updateDashboardData();
-    }
-
-    function populateFilterOptions() {
-        // ... (o código de populateFilterOptions permanece o mesmo e já usa a nova opção 'Em Andamento')
-        const selectElements = [filterTreinamentoEl, filterRespEl, filterFinalizadaEl];
-        selectElements.forEach(select => {
-            select.innerHTML = '<option value="">Todos</option>';
-        });
-
-        columns.forEach(col => {
-            if (col.type === 'select') {
-                const targetEl = document.getElementById(`filter${col.key.charAt(0).toUpperCase() + col.key.slice(1)}`);
-                if (targetEl) {
-                    const options = col.options.split(',').map(s => s.trim()).filter(Boolean);
-                    options.forEach(option => {
-                        const op = document.createElement('option');
-                        op.value = option;
-                        op.textContent = option;
-                        targetEl.appendChild(op);
-                    });
-                }
+            if (progressPlotagemChartInstance) {
+                progressPlotagemChartInstance.destroy();
             }
-        });
 
-        filterTreinamentoEl.onchange = renderRows;
-        filterRespEl.onchange = renderRows;
-        filterFinalizadaEl.onchange = renderRows;
+            progressPlotagemChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Realizado', 'Aguardando', 'Pendente'],
+                    datasets: [{
+                        data: [realizadoCount, aguardandoCount, pendenteCount],
+                        backgroundColor: ['#10B981', '#F59E0B', '#6B7280'],
+                        hoverBackgroundColor: ['#059669', '#D97706', '#4B5563'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '80%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    return `${label}: ${value} linhas`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
-        clearFiltersBtn.onclick = () => {
-            filterTreinamentoEl.value = '';
-            filterRespEl.value = '';
-            filterFinalizadaEl.value = '';
-            renderRows();
-        };
-    }
 
-    // ATUALIZAÇÃO PRINCIPAL: Cálculo e exibição do novo status 'Em Andamento'
-    function updateDashboardData() {
-        const total = rows.length;
+        function updateDashboardData() {
+            const total = rows.length;
 
-        const treinamentoOk = rows.filter(row => row.treinamento === "Ok").length;
-        const treinamentoPendente = rows.filter(row => row.treinamento === "Pendente").length;
-        // NOVO: Conta as linhas com status 'Em Andamento'
-        const treinamentoAndamento = rows.filter(row => row.treinamento === "Em Andamento").length;
+            const treinamentoOk = rows.filter(row => row.treinamento === "Ok").length;
+            const treinamentoPendente = rows.filter(row => row.treinamento === "Pendente").length;
+            const treinamentoAndamento = rows.filter(row => row.treinamento === "Em Andamento").length;
 
-        const percentualOk = total === 0 ? 0 : (treinamentoOk / total) * 100;
-        const percentualPendente = total === 0 ? 0 : (treinamentoPendente / total) * 100;
-        // NOVO: Calcula o percentual de 'Em Andamento'
-        const percentualAndamento = total === 0 ? 0 : (treinamentoAndamento / total) * 100;
+            const percentualOk = total === 0 ? 0 : (treinamentoOk / total) * 100;
+            const percentualPendente = total === 0 ? 0 : (treinamentoPendente / total) * 100;
+            const percentualAndamento = total === 0 ? 0 : (treinamentoAndamento / total) * 100;
 
-        const acompanhamentoRealizado = rows.filter(row => row.acompanhamento === "Realizado").length;
-        const acompanhamentoNaoRealizado = rows.filter(row => row.acompanhamento === "Não Realizado").length;
-        const percentualRealizado = total === 0 ? 0 : (acompanhamentoRealizado / total) * 100;
-        const percentualNaoRealizado = total === 0 ? 0 : (acompanhamentoNaoRealizado / total) * 100;
+            const acompanhamentoRealizado = rows.filter(row => row.acompanhamento === "Realizado").length;
+            const acompanhamentoNaoRealizado = rows.filter(row => row.acompanhamento === "Não Realizado").length;
+            const percentualRealizado = total === 0 ? 0 : (acompanhamentoRealizado / total) * 100;
+            const percentualNaoRealizado = total === 0 ? 0 : (acompanhamentoNaoRealizado / total) * 100;
 
-        const finalizadaSim = rows.filter(row => row.finalizada === "Sim").length;
-        const finalizadaNao = rows.filter(row => row.finalizada === "Não").length;
-        const percentualSim = total === 0 ? 0 : (finalizadaSim / total) * 100;
-        const percentualNao = total === 0 ? 0 : (finalizadaNao / total) * 100;
+            const finalizadaSim = rows.filter(row => row.finalizada === "Sim").length;
+            const finalizadaNao = rows.filter(row => row.finalizada === "Não").length;
+            const percentualSim = total === 0 ? 0 : (finalizadaSim / total) * 100;
+            const percentualNao = total === 0 ? 0 : (finalizadaNao / total) * 100;
 
-        document.getElementById("progressTreinamentoPercentOk").textContent = percentualOk.toFixed(2);
-        document.getElementById("progressTreinamentoPercentPendente").textContent = percentualPendente.toFixed(2);
-        // NOVO: Exibe o percentual de 'Em Andamento'
-        document.getElementById("progressTreinamentoPercentAndamento").textContent = percentualAndamento.toFixed(2);
-        
-        document.getElementById("progressTreinamentoCountOk").textContent = treinamentoOk;
-        document.getElementById("progressTreinamentoCountTotal").textContent = total;
+            const plotagemRealizado = rows.filter(row => row.plotagem === "Realizado").length;
+            const plotagemAguardando = rows.filter(row => row.plotagem === "Aguardando").length;
+            const plotagemPendente = rows.filter(row => row.plotagem === "Pendente").length;
 
-        document.getElementById("progressAcompanhamentoPercentRealizado").textContent = percentualRealizado.toFixed(2);
-        document.getElementById("progressAcompanhamentoPercentNaoRealizado").textContent = percentualNaoRealizado.toFixed(2);
-        document.getElementById("progressAcompanhamentoCountRealizado").textContent = acompanhamentoRealizado;
-        document.getElementById("progressAcompanhamentoCountTotal").textContent = total;
+            const percentualPlotagemRealizado = total === 0 ? 0 : (plotagemRealizado / total) * 100;
+            const percentualPlotagemAguardando = total === 0 ? 0 : (plotagemAguardando / total) * 100;
+            const percentualPlotagemPendente = total === 0 ? 0 : (plotagemPendente / total) * 100;
 
-        document.getElementById("progressFinalizadaPercentSim").textContent = percentualSim.toFixed(2);
-        document.getElementById("progressFinalizadaPercentNao").textContent = percentualNao.toFixed(2);
-        document.getElementById("progressFinalizadaCountSim").textContent = finalizadaSim;
-        document.getElementById("progressFinalizadaCountTotal").textContent = total;
 
-        const tabDashboardContent = document.getElementById('tabDashboardContent');
-        if (!tabDashboardContent.classList.contains('hidden')) {
-            // NOVO: Passa a contagem de 'Em Andamento' para a função de atualização do gráfico
+            // Atualiza Treinamento
+            document.getElementById("progressTreinamentoPercentOk").textContent = percentualOk.toFixed(2);
+            document.getElementById("progressTreinamentoPercentPendente").textContent = percentualPendente.toFixed(2);
+            document.getElementById("progressTreinamentoPercentAndamento").textContent = percentualAndamento.toFixed(2);
+            document.getElementById("progressTreinamentoCountOk").textContent = treinamentoOk;
+            document.getElementById("progressTreinamentoCountTotal").textContent = total;
+
+            // Atualiza Acompanhamento
+            document.getElementById("progressAcompanhamentoPercentRealizado").textContent = percentualRealizado.toFixed(2);
+            document.getElementById("progressAcompanhamentoPercentNaoRealizado").textContent = percentualNaoRealizado.toFixed(2);
+            document.getElementById("progressAcompanhamentoCountRealizado").textContent = acompanhamentoRealizado;
+            document.getElementById("progressAcompanhamentoCountTotal").textContent = total;
+
+            // Atualiza Finalizada
+            document.getElementById("progressFinalizadaPercentSim").textContent = percentualSim.toFixed(2);
+            document.getElementById("progressFinalizadaPercentNao").textContent = percentualNao.toFixed(2);
+            document.getElementById("progressFinalizadaCountSim").textContent = finalizadaSim;
+            document.getElementById("progressFinalizadaCountTotal").textContent = total;
+
+            // Atualiza contagens e percentuais de Plotagem
+            document.getElementById("progressPlotagemPercentRealizado").textContent = percentualPlotagemRealizado.toFixed(2);
+            document.getElementById("progressPlotagemPercentAguardando").textContent = percentualPlotagemAguardando.toFixed(2);
+            document.getElementById("progressPlotagemPercentPendente").textContent = percentualPlotagemPendente.toFixed(2);
+            document.getElementById("progressPlotagemCountRealizado").textContent = plotagemRealizado;
+            document.getElementById("progressPlotagemCountTotal").textContent = total;
+
+            // Chamadas de renderização (com a correção anterior)
             updateProgressTreinamentoChart(treinamentoOk, treinamentoPendente, treinamentoAndamento);
             updateProgressAcompanhamentoChart(acompanhamentoRealizado, acompanhamentoNaoRealizado);
             updateProgressFinalizadaChart(finalizadaSim, finalizadaNao);
-        }
-    }
+            updateProgressPlotagemChart(plotagemRealizado, plotagemAguardando, plotagemPendente);
 
-    // 1. Gráfico ROSCA (Progresso Treinamento OK/Pendente/Em Andamento)
-    // NOVO: Adiciona 'andamentoCount' como parâmetro
-    function updateProgressTreinamentoChart(okCount, pendingCount, andamentoCount) {
-        const ctx = document.getElementById('progressTreinamentoChart').getContext('2d');
-
-        if (progressTreinamentoChartInstance) {
-            progressTreinamentoChartInstance.destroy();
         }
 
-        progressTreinamentoChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                // NOVO: Adiciona 'Em Andamento' nos labels
-                labels: ['Concluído (Ok)', 'Pendente', 'Em Andamento'], 
-                datasets: [{
-                    // NOVO: Adiciona 'andamentoCount' nos dados
-                    data: [okCount, pendingCount, andamentoCount],
-                    // NOVO: Adiciona uma cor para 'Em Andamento' (laranja claro)
-                    backgroundColor: ['#10B981', '#FCD34D', '#3B82F6'], 
-                    hoverBackgroundColor: ['#059669', '#FBBF24', '#2563EB'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                cutout: '80%',
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed;
-                                return `${label}: ${value} linhas`;
+        // 1. Gráfico ROSCA (Progresso Treinamento OK/Pendente/Em Andamento)
+        function updateProgressTreinamentoChart(okCount, pendingCount, andamentoCount) {
+            const ctx = document.getElementById('progressTreinamentoChart').getContext('2d');
+
+            if (progressTreinamentoChartInstance) {
+                progressTreinamentoChartInstance.destroy();
+            }
+
+            progressTreinamentoChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Concluído (Ok)', 'Pendente', 'Em Andamento'],
+                    datasets: [{
+                        data: [okCount, pendingCount, andamentoCount],
+                        backgroundColor: ['#10B981', '#FCD34D', '#3B82F6'],
+                        hoverBackgroundColor: ['#059669', '#FBBF24', '#2563EB'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '80%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    return `${label}: ${value} linhas`;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-    }
-
-    // 2. Gráfico ROSCA (Progresso Acompanhamento Realizado/Não Realizado)
-    function updateProgressAcompanhamentoChart(realizadoCount, naoRealizadoCount) {
-        // ... (função permanece a mesma)
-        const ctx = document.getElementById('progressAcompanhamentoChart').getContext('2d');
-
-        if (progressAcompanhamentoChartInstance) {
-            progressAcompanhamentoChartInstance.destroy();
+            });
         }
 
-        progressAcompanhamentoChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Realizado', 'Não Realizado'],
-                datasets: [{
-                    data: [realizadoCount, naoRealizadoCount],
-                    backgroundColor: ['#F59E0B', '#EF4444'],
-                    hoverBackgroundColor: ['#D97706', '#DC2626'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                cutout: '80%',
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed;
-                                return `${label}: ${value} linhas`;
+        // 2. Gráfico ROSCA (Progresso Acompanhamento Realizado/Não Realizado)
+        function updateProgressAcompanhamentoChart(realizadoCount, naoRealizadoCount) {
+            const ctx = document.getElementById('progressAcompanhamentoChart').getContext('2d');
+
+            if (progressAcompanhamentoChartInstance) {
+                progressAcompanhamentoChartInstance.destroy();
+            }
+
+            progressAcompanhamentoChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Realizado', 'Não Realizado'],
+                    datasets: [{
+                        data: [realizadoCount, naoRealizadoCount],
+                        backgroundColor: ['#F59E0B', '#EF4444'],
+                        hoverBackgroundColor: ['#D97706', '#DC2626'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '80%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    return `${label}: ${value} linhas`;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-    }
-
-
-    // 3. Gráfico ROSCA (Progresso FINALIZADA SIM/NÃO)
-    function updateProgressFinalizadaChart(simCount, naoCount) {
-        // ... (função permanece a mesma)
-        const ctx = document.getElementById('progressFinalizadaChart').getContext('2d');
-
-        if (progressFinalizadaChartInstance) {
-            progressFinalizadaChartInstance.destroy();
+            });
         }
 
-        progressFinalizadaChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Finalizada (Sim)', 'Não Finalizada'],
-                datasets: [{
-                    data: [simCount, naoCount],
-                    backgroundColor: ['#3B82F6', '#6B7280'],
-                    hoverBackgroundColor: ['#2563EB', '#4B5563'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                cutout: '80%',
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed;
-                                return `${label}: ${value} linhas`;
+
+        // 3. Gráfico ROSCA (Progresso FINALIZADA SIM/NÃO)
+        function updateProgressFinalizadaChart(simCount, naoCount) {
+            const ctx = document.getElementById('progressFinalizadaChart').getContext('2d');
+
+            if (progressFinalizadaChartInstance) {
+                progressFinalizadaChartInstance.destroy();
+            }
+
+            progressFinalizadaChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Finalizada (Sim)', 'Não Finalizada'],
+                    datasets: [{
+                        data: [simCount, naoCount],
+                        backgroundColor: ['#3B82F6', '#6B7280'],
+                        hoverBackgroundColor: ['#2563EB', '#4B5563'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '80%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    return `${label}: ${value} linhas`;
+                                }
                             }
                         }
                     }
                 }
+            });
+        }
+
+
+        // =======================================================
+        // FUNÇÕES DE EXPORTAÇÃO E CONTROLE (IDÊNTICAS AO ORIGINAL)
+        // =======================================================
+
+        function createDownloadLink(content, type, extension) {
+            const BOM = "\uFEFF";
+            const blob = new Blob([BOM, content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `tabela_operacional_${new Date().toISOString().slice(0, 10)}.${extension}`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function prepareData(separator) {
+            const rowsToExport = applyFilters();
+            rowsToExport.forEach(calculateTime);
+
+            const exportableColumns = columns.filter(c => c.key !== 'acoes');
+
+            const headers = exportableColumns.map(c => c.label).join(separator);
+
+            const csvRows = rowsToExport.map(row =>
+                exportableColumns.map(col => {
+                    let value = row[col.key] || '';
+                    value = String(value).replace(/"/g, '""');
+                    if (value.includes(separator) || value.includes('"') || value.includes('\n')) {
+                        value = `"${value}"`;
+                    }
+                    return value;
+                }).join(separator)
+            );
+
+            return [headers, ...csvRows].join('\n');
+        }
+
+        function exportToCsv() {
+            const content = prepareData(',');
+            createDownloadLink(content, 'text/csv;charset=utf-8;', 'csv');
+        }
+
+        function exportToExcel() {
+            const content = prepareData(';');
+            createDownloadLink(content, 'application/vnd.ms-excel;charset=utf-8;', 'xls');
+        }
+
+        function exportToPDF() {
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                 alert('A biblioteca jsPDF não foi carregada. Verifique sua conexão e as tags <script> no <head>.');
+                 return;
             }
-        });
-    }
 
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'pt', 'a4');
+            const rowsToExport = applyFilters();
+            rowsToExport.forEach(calculateTime);
 
-    // =======================================================
-    // FUNÇÕES DE EXPORTAÇÃO E CONTROLE
-    // =======================================================
+            const exportableColumns = columns.filter(c => c.key !== 'acoes');
+            const head = [exportableColumns.map(c => c.label)];
+            const body = rowsToExport.map(row =>
+                exportableColumns.map(col => String(row[col.key] || ''))
+            );
 
-    function createDownloadLink(content, type, extension) {
-        const BOM = "\uFEFF";
-        const blob = new Blob([BOM, content], { type: type });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
+            doc.autoTable({
+                head: head,
+                body: body,
+                theme: 'striped',
+                startY: 50,
+                styles: { fontSize: 8, cellPadding: 4, halign: 'center' },
+                headStyles: { fillColor: [59, 130, 246] },
+                didDrawPage: function (data) {
+                    doc.setFontSize(14);
+                    doc.text("Tabela de Operacional - MEEDS MACAÉ", data.settings.margin.left, 30);
 
-        link.setAttribute('href', url);
-        link.setAttribute('download', `tabela_treinamentos_${new Date().toISOString().slice(0, 10)}.${extension}`);
-        link.style.visibility = 'hidden';
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
-
-    function prepareData(separator) {
-        const rowsToExport = applyFilters();
-        rowsToExport.forEach(calculateTime);
-
-        const exportableColumns = columns.filter(c => c.key !== 'acoes');
-
-        const headers = exportableColumns.map(c => c.label).join(separator);
-
-        const csvRows = rowsToExport.map(row =>
-            exportableColumns.map(col => {
-                let value = row[col.key] || '';
-                value = String(value).replace(/"/g, '""');
-                if (value.includes(separator) || value.includes('"') || value.includes('\n')) {
-                    value = `"${value}"`;
+                    doc.setFontSize(8);
+                    const pageCount = doc.internal.getNumberOfPages();
+                    doc.text(`Página ${data.pageNumber} de ${pageCount}`, doc.internal.pageSize.width - data.settings.margin.right, doc.internal.pageSize.height - 10);
                 }
-                return value;
-            }).join(separator)
-        );
+            });
 
-        return [headers, ...csvRows].join('\n');
-    }
-
-    function exportToCsv() {
-        const content = prepareData(',');
-        createDownloadLink(content, 'text/csv;charset=utf-8;', 'csv');
-    }
-
-    function exportToExcel() {
-        const content = prepareData(';');
-        createDownloadLink(content, 'application/vnd.ms-excel;charset=utf-8;', 'xls');
-    }
-
-    function exportToPDF() {
-        if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-             alert('A biblioteca jsPDF não foi carregada. Verifique sua conexão e as tags <script> no <head>.');
-             return;
+            doc.save(`tabela_operacional_${new Date().toISOString().slice(0, 10)}.pdf`);
         }
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'pt', 'a4');
-        const rowsToExport = applyFilters();
-        rowsToExport.forEach(calculateTime);
+        // =======================================================
+        // LÓGICA DE ABAS E EVENTOS
+        // =======================================================
 
-        const exportableColumns = columns.filter(c => c.key !== 'acoes');
-        const head = [exportableColumns.map(c => c.label)];
-        const body = rowsToExport.map(row =>
-            exportableColumns.map(col => String(row[col.key] || ''))
-        );
+        const downloadButton = document.getElementById('downloadButton');
+        const downloadMenu = document.getElementById('downloadMenu');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const exportXlsBtn = document.getElementById('exportXlsBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
 
-        doc.autoTable({
-            head: head,
-            body: body,
-            theme: 'striped',
-            startY: 50,
-            styles: { fontSize: 8, cellPadding: 4, halign: 'center' },
-            headStyles: { fillColor: [59, 130, 246] },
-            didDrawPage: function (data) {
-                doc.setFontSize(14);
-                doc.text("Tabela de Treinamentos - MEEDS MACAÉ", data.settings.margin.left, 30);
+        downloadButton.onclick = (e) => {
+            e.stopPropagation();
+            downloadMenu.classList.toggle('hidden');
+        };
 
-                doc.setFontSize(8);
-                const pageCount = doc.internal.getNumberOfPages();
-                doc.text(`Página ${data.pageNumber} de ${pageCount}`, doc.internal.pageSize.width - data.settings.margin.right, doc.internal.pageSize.height - 10);
+        document.addEventListener('click', (e) => {
+            if (downloadMenu && !downloadMenu.contains(e.target) && !downloadButton.contains(e.target)) {
+                downloadMenu.classList.add('hidden');
             }
         });
 
-        doc.save(`tabela_treinamentos_${new Date().toISOString().slice(0, 10)}.pdf`);
-    }
+        exportCsvBtn.onclick = (e) => { e.preventDefault(); exportToCsv(); downloadMenu.classList.add('hidden'); };
+        exportXlsBtn.onclick = (e) => { e.preventDefault(); exportToExcel(); downloadMenu.classList.add('hidden'); };
+        exportPdfBtn.onclick = (e) => { e.preventDefault(); exportToPDF(); downloadMenu.classList.add('hidden'); };
 
-    // LÓGICA DE ABAS E EVENTOS
-    const downloadButton = document.getElementById('downloadButton');
-    const downloadMenu = document.getElementById('downloadMenu');
-    const exportCsvBtn = document.getElementById('exportCsvBtn');
-    const exportXlsBtn = document.getElementById('exportXlsBtn');
-    const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const tabPrincipal = document.getElementById('tabPrincipal');
+        const tabDashboard = document.getElementById('tabDashboard');
+        const tabPrincipalContent = document.getElementById('tabPrincipalContent');
+        const tabDashboardContent = document.getElementById('tabDashboardContent');
 
-    downloadButton.onclick = (e) => {
-        e.stopPropagation();
-        downloadMenu.classList.toggle('hidden');
-    };
+        function showTab(tabName) {
+            [tabPrincipal, tabDashboard].forEach(tab => {
+                tab.classList.remove('bg-white', 'shadow-sm', 'font-semibold', 'text-white', 'bg-indigo-600', 'shadow-md');
+                tab.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+            });
 
-    document.addEventListener('click', (e) => {
-        if (downloadMenu && !downloadMenu.contains(e.target) && !downloadButton.contains(e.target)) {
-            downloadMenu.classList.add('hidden');
+            [tabPrincipalContent, tabDashboardContent].forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            if (tabName === 'principal') {
+                tabPrincipalContent.classList.remove('hidden');
+                tabPrincipal.classList.add('bg-white', 'shadow-sm', 'font-semibold', 'text-gray-700');
+                tabPrincipal.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                renderRows();
+            } else if (tabName === 'dashboard') {
+                tabDashboardContent.classList.remove('hidden');
+                tabDashboard.classList.add('bg-indigo-600', 'shadow-md', 'text-white');
+                tabDashboard.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                updateDashboardData();
+            }
         }
-    });
 
-    exportCsvBtn.onclick = (e) => { e.preventDefault(); exportToCsv(); downloadMenu.classList.add('hidden'); };
-    exportXlsBtn.onclick = (e) => { e.preventDefault(); exportToExcel(); downloadMenu.classList.add('hidden'); };
-    exportPdfBtn.onclick = (e) => { e.preventDefault(); exportToPDF(); downloadMenu.classList.add('hidden'); };
+        tabPrincipal.onclick = () => showTab('principal');
+        tabDashboard.onclick = () => showTab('dashboard');
 
-    const tabPrincipal = document.getElementById('tabPrincipal');
-    const tabDashboard = document.getElementById('tabDashboard');
-    const tabPrincipalContent = document.getElementById('tabPrincipalContent');
-    const tabDashboardContent = document.getElementById('tabDashboardContent');
-
-    function showTab(tabName) {
-        [tabPrincipal, tabDashboard].forEach(tab => {
-            tab.classList.remove('bg-white', 'shadow-sm', 'font-semibold');
-            tab.classList.add('bg-gray-50');
-        });
-
-        [tabPrincipalContent, tabDashboardContent].forEach(content => {
-            content.classList.add('hidden');
-        });
-
-        if (tabName === 'principal') {
-            tabPrincipalContent.classList.remove('hidden');
-            tabPrincipal.classList.add('bg-white', 'shadow-sm', 'font-semibold');
-            tabPrincipal.classList.remove('bg-gray-50');
+        document.getElementById('addRow').onclick = () => {
+            rows.push({ plotagem: 'Aguardando' });
+            persist();
             renderRows();
-        } else if (tabName === 'dashboard') {
-            tabDashboardContent.classList.remove('hidden');
-            tabDashboard.classList.add('bg-white', 'shadow-sm', 'font-semibold');
-            tabDashboard.classList.remove('bg-gray-50');
-            updateDashboardData();
-        }
-    }
+        };
 
-    tabPrincipal.onclick = () => showTab('principal');
-    tabDashboard.onclick = () => showTab('dashboard');
+        document.getElementById('clr').onclick = () => {
+          const senha = prompt("🚨 Digite a senha para APAGAR TODOS os dados:");
+          if (senha === "1") {
+            if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja APAGAR TODOS os dados da tabela? Esta ação é IRREVERSÍVEL!')) {
+              rows = [];
+              persist();
+              renderRows();
+              showTab('principal');
+              alert("✅ Todos os dados foram apagados com sucesso!");
+            }
+          } else if (senha !== null) {
+            alert("❌ Senha incorreta! Os dados não foram apagados.");
+          }
+        };
 
-    document.getElementById('addRow').onclick = () => { 
-        rows.push({}); 
-        persist(); 
-        renderRows(); 
-    };
-
-    document.getElementById('clr').onclick = () => {
-      const senha = prompt("🚨 Digite a senha para APAGAR TODOS os dados:");
-      if (senha === "1") {
-        if (confirm('⚠️ ATENÇÃO: Tem certeza que deseja APAGAR TODOS os dados da tabela? Esta ação é IRREVERSÍVEL!')) {
-          rows = [];
-          persist();
-          renderRows();
-          showTab('principal');
-          alert("✅ Todos os dados foram apagados com sucesso!");
-        }
-      } else if (senha !== null) {
-        alert("❌ Senha incorreta! Os dados não foram apagados.");
-      }
-    };
-
-    /* ===== Start ===== */
-    populateFilterOptions();
-    renderHead();
-    showTab('principal'); 
-  </script>
+        /* ===== Start ===== */
+        populateFilterOptions();
+        renderHead();
+        showTab('principal');
+    </script>
 </body>
 </html>
