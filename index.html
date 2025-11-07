@@ -1,808 +1,789 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MEEDS - Controle Operacional v4.0</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <style>
-    .select-mini{padding:.25rem .5rem;font-size:.75rem;height:1.75rem}
-    .table-container{max-width:100%;overflow-x:auto}
-    #dataTable th,#dataTable td{white-space:nowrap}
-    .dashboard-card-content{display:flex;flex-direction:column;align-items:center}
-    .dashboard-chart-area{position:relative;width:150px;height:150px;margin-bottom:1rem}
-    .dashboard-chart-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-    .dashboard-stats-list{width:100%;padding:0 .5rem}
-    .calendar-month-container{width:100%;overflow-x:auto}
-    .calendar-month-table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-    .calendar-weekday-header{background:#3B82F6;color:#fff;font-weight:600;padding:.75rem;text-align:center;border:1px solid #2563EB;font-size:.875rem}
-    .calendar-week-row{border-bottom:1px solid #E5E7EB}
-    .calendar-day-cell-empty{background:#F9FAFB;border:1px solid #E5E7EB;min-height:100px;height:100px}
-    .calendar-day-cell-month{border:1px solid #E5E7EB;min-height:100px;height:100px;vertical-align:top;padding:.5rem;background:#fff;position:relative}
-    .calendar-day-number{font-weight:600;color:#374151;font-size:.875rem;margin-bottom:.25rem}
-    .calendar-day-events{display:flex;flex-direction:column;gap:.1rem;margin-top:.25rem}
-    .calendar-event-badge{padding:.1rem .25rem;border-radius:4px;font-size:.65rem;font-weight:500;cursor:pointer;transition:.2s;display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    .calendar-event-badge:hover{transform:scale(1.1);box-shadow:0 2px 4px rgba(0,0,0,.2)}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MEEDS - Controle Operacional v4.0</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+.select-mini{padding:.25rem .5rem;font-size:.75rem;height:1.75rem}
+.table-container{max-width:100%;overflow-x:auto}
+#dataTable th,#dataTable td{white-space:nowrap}
+.dashboard-card-content{display:flex;flex-direction:column;align-items:center}
+.dashboard-chart-area{position:relative;width:150px;height:150px;margin-bottom:1rem}
+.dashboard-chart-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dashboard-stats-list{width:100%;padding:0 .5rem}
+.calendar-month-container{width:100%;overflow-x:auto}
+.calendar-month-table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.calendar-weekday-header{background:#3B82F6;color:#fff;font-weight:600;padding:.75rem;text-align:center;border:1px solid #2563EB;font-size:.875rem}
+.calendar-week-row{border-bottom:1px solid #E5E7EB}
+.calendar-day-cell-empty{background:#F9FAFB;border:1px solid #E5E7EB;min-height:100px;height:100px}
+.calendar-day-cell-month{border:1px solid #E5E7EB;min-height:100px;height:100px;vertical-align:top;padding:.5rem;background:#fff;position:relative}
+.calendar-day-number{font-weight:600;color:#374151;font-size:.875rem;margin-bottom:.25rem}
+.calendar-day-events{display:flex;flex-direction:column;gap:.1rem;margin-top:.25rem}
+.calendar-event-badge{padding:.1rem .25rem;border-radius:4px;font-size:.65rem;font-weight:500;cursor:pointer;transition:.2s;display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.calendar-event-badge:hover{transform:scale(1.1);box-shadow:0 2px 4px rgba(0,0,0,.2)}
+</style>
 </head>
 <body class="bg-blue-50 font-sans">
-  <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-    <div class="bg-white shadow-xl rounded-xl p-4 mb-6 border border-blue-200">
-      <div class="flex items-center mb-4">
-        <img src="logo%20callmed%201.PNG" alt="Logo da Empresa" class="h-20 mr-4"/>
-        <div>
-          <h1 class="text-3xl font-bold text-indigo-700 mb-0">MEEDS - Controle Operacional</h1>
-          <p class="text-gray-600">Monitoramento de Processos Operacionais por Unidade.</p>
-        </div>
-      </div>
+<div class="container mx-auto p-4 sm:p-6 lg:p-8">
+<div class="bg-white shadow-xl rounded-xl p-4 mb-6 border border-blue-200">
+<div class="flex items-center mb-4">
+<img src="logo%20callmed%201.PNG" alt="Logo da Empresa" class="h-20 mr-4"/>
+<div>
+<h1 class="text-3xl font-bold text-indigo-700 mb-0">MEEDS - Controle Operacional</h1>
+<p class="text-gray-600">Monitoramento de Processos Operacionais por Unidade.</p>
+</div>
+</div>
 
-      <div class="flex flex-wrap gap-3 justify-between items-center mt-4 border-t pt-4 border-gray-200">
-        <div class="flex gap-3">
-          <button id="addRow" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 flex items-center text-sm">+ Nova Linha</button>
-          <button id="clr" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 flex items-center text-sm">Limpar Tudo 🗑️</button>
-        </div>
+<div class="flex flex-wrap gap-3 justify-between items-center mt-4 border-t pt-4 border-gray-200">
+<div class="flex gap-3">
+<button id="addRow" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 flex items-center text-sm">+ Nova Linha</button>
+<button id="clr" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 flex items-center text-sm">Limpar Tudo 🗑️</button>
+</div>
 
-        <div class="relative inline-block text-left">
-          <button type="button" id="downloadButton" class="inline-flex justify-center w-full rounded-md border border-yellow-400 shadow-sm px-4 py-2 bg-yellow-400 text-sm font-medium text-gray-900 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-            Exportar Dados
-            <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-          </button>
-          <div id="downloadMenu" class="hidden origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-            <div class="py-1">
-              <a href="#" id="exportCsvBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">CSV (Vírgula)</a>
-              <a href="#" id="exportXlsBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Excel (Ponto e Vírgula)</a>
-              <a href="#" id="exportPdfBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">PDF</a>
-            </div>
-          </div>
-        </div>
-      </div>
+<div class="relative inline-block text-left">
+<button type="button" id="downloadButton" class="inline-flex justify-center w-full rounded-md border border-yellow-400 shadow-sm px-4 py-2 bg-yellow-400 text-sm font-medium text-gray-900 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+Exportar Dados
+<svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+</button>
+<div id="downloadMenu" class="hidden origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+<div class="py-1">
+<a href="#" id="exportCsvBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">CSV (Vírgula)</a>
+<a href="#" id="exportXlsBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">Excel (Ponto e Vírgula)</a>
+<a href="#" id="exportPdfBtn" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100">PDF</a>
+</div>
+</div>
+</div>
+</div>
 
-      <div class="mt-5 pt-4 border-t border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Filtros Rápidos:</h3>
-        <div class="flex flex-wrap gap-4 mb-3 items-end">
-          <div>
-            <label for="filterTreinamento" class="text-sm block">Treinamento:</label>
-            <select id="filterTreinamento" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
-          </div>
-          <div>
-            <label for="filterResp" class="text-sm block">Responsáveis:</label>
-            <select id="filterResp" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
-          </div>
-            <div>
-              <label for="filterFinalizada" class="text-sm block">Finalizada:</label>
-              <select id="filterFinalizada" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
-            </div>
-            <!-- NOVO: filtro Entrega -->
-            <div>
-<label for="filterEntrega" class="text-sm block">Entrega:</label>
-<select id="filterEntrega" class="select-mini border rounded-lg border-blue-200">
-  <option value="">Todas</option>
-</select>
+<div class="mt-5 pt-4 border-t border-gray-200">
+<h3 class="text-lg font-semibold text-gray-700 mb-2">Filtros Rápidos:</h3>
+<div class="flex flex-wrap gap-4 mb-3 items-end">
+<div>
+<label for="filterTreinamento" class="text-sm block">Treinamento:</label>
+<select id="filterTreinamento" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
+</div>
+<div>
+<label for="filterResp" class="text-sm block">Responsáveis:</label>
+<select id="filterResp" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
+</div>
+<div>
+<label for="filterFinalizada" class="text-sm block">Finalizada:</label>
+<select id="filterFinalizada" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
+</div>
+<!-- Plotagem será inserido via JS -->
+<button id="clearFilters" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-bold py-1.5 px-3 rounded-lg transition duration-150 mt-3 sm:mt-0 border border-blue-300">Limpar Filtros</button>
+</div>
+</div>
+</div>
 
-            </div>
-          <!-- Plotagem será inserido via JS -->
-          <button id="clearFilters" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-bold py-1.5 px-3 rounded-lg transition duration-150 mt-3 sm:mt-0 border border-blue-300">Limpar Filtros</button>
-        </div>
-      </div>
-    </div>
+<div class="flex border-b border-gray-200 mb-4">
+<button id="tabPrincipal" class="py-2 px-4 -mb-px text-sm text-blue-800 border-t border-l border-r rounded-t-lg transition duration-150 bg-blue-100 hover:bg-blue-200 font-semibold">Tabela de Processos</button>
+<button id="tabDashboard" class="py-2 px-4 -mb-px text-sm border-t border-l border-r rounded-t-lg transition duration-150 bg-indigo-600 text-white shadow-md">Dashboard de Status</button>
+<button id="tabCalendario" class="py-2 px-4 -mb-px text-sm border-t border-l border-r rounded-t-lg transition duration-150 bg-gray-100 text-gray-700 hover:bg-gray-200">Calendário</button>
+</div>
 
-    <div class="flex border-b border-gray-200 mb-4">
-      <button id="tabPrincipal" class="py-2 px-4 -mb-px text-sm text-blue-800 border-t border-l border-r rounded-t-lg transition duration-150 bg-blue-100 hover:bg-blue-200 font-semibold">Tabela de Processos</button>
-      <button id="tabDashboard" class="py-2 px-4 -mb-px text-sm border-t border-l border-r rounded-t-lg transition duration-150 bg-indigo-600 text-white shadow-md">Dashboard de Status</button>
-      <button id="tabCalendario" class="py-2 px-4 -mb-px text-sm border-t border-l border-r rounded-t-lg transition duration-150 bg-gray-100 text-gray-700 hover:bg-gray-200">Calendário</button>
-    </div>
+<div class="bg-white shadow-xl rounded-xl p-6 border border-blue-200">
+<!-- TABELA -->
+<div id="tabPrincipalContent">
+<div class="table-container shadow-md rounded-lg border border-blue-200">
+<table class="min-w-full divide-y divide-gray-200" id="dataTable">
+<thead class="bg-blue-50"><tr id="thead"></tr></thead>
+<tbody class="bg-white divide-y divide-gray-200" id="tbody"></tbody>
+</table>
+</div>
+</div>
 
-    <div class="bg-white shadow-xl rounded-xl p-6 border border-blue-200">
-      <!-- TABELA -->
-      <div id="tabPrincipalContent">
-        <div class="table-container shadow-md rounded-lg border border-blue-200">
-          <table class="min-w-full divide-y divide-gray-200" id="dataTable">
-            <thead class="bg-blue-50"><tr id="thead"></tr></thead>
-            <tbody class="bg-white divide-y divide-gray-200" id="tbody"></tbody>
-          </table>
-        </div>
-      </div>
+<!-- DASHBOARD -->
+<div id="tabDashboardContent" class="hidden">
+<h2 class="text-2xl font-bold text-indigo-700 mb-6">Visão Geral dos Processos</h2>
 
-      <!-- DASHBOARD -->
-      <div id="tabDashboardContent" class="hidden">
-        <h2 class="text-2xl font-bold text-indigo-700 mb-6">Visão Geral dos Processos</h2>
+<!-- TOTAL -->
+<h3 class="text-xl font-bold text-indigo-700 mb-2">Total</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<!-- Treinamento -->
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Treinamento</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="total_progressTreinamentoChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressTreinamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-blue-600"><span>🟦 Em Andamento:</span><span><span id="total_progressTreinamentoPercentAndamento">0.00</span>%</span></p>
+<p class="flex justify-between text-green-600"><span>✅ Concluído (Ok):</span><span><span id="total_progressTreinamentoPercentOk">0.00</span>% (<span id="total_progressTreinamentoCountOk">0</span>)</span></p>
+<p class="flex justify-between text-yellow-600"><span>⚠️ Pendente:</span><span><span id="total_progressTreinamentoPercentPendente">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<!-- Acompanhamento -->
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Acompanhamento</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="total_progressAcompanhamentoChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressAcompanhamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-yellow-600"><span>🟡 Realizado:</span><span><span id="total_progressAcompanhamentoPercentRealizado">0.00</span>% (<span id="total_progressAcompanhamentoCountRealizado">0</span>)</span></p>
+<p class="flex justify-between text-red-600"><span>🔴 Não Realizado:</span><span><span id="total_progressAcompanhamentoPercentNaoRealizado">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<!-- Finalizada -->
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Status Finalizado</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="total_progressFinalizadaChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressFinalizadaCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-blue-600"><span>🟦 Finalizada (Sim):</span><span><span id="total_progressFinalizadaPercentSim">0.00</span>% (<span id="total_progressFinalizadaCountSim">0</span>)</span></p>
+<p class="flex justify-between text-gray-500"><span>⚪ Não Finalizada:</span><span><span id="total_progressFinalizadaPercentNao">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<!-- Plotagem -->
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Plotagem</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="total_progressPlotagemChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressPlotagemCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-green-600"><span>✅ Realizado:</span><span><span id="total_progressPlotagemPercentRealizado">0.00</span>% (<span id="total_progressPlotagemCountRealizado">0</span>)</span></p>
+<p class="flex justify-between text-yellow-600"><span>🟡 Aguardando:</span><span><span id="total_progressPlotagemPercentAguardando">0.00</span>%</span></p>
+<p class="flex justify-between text-gray-700"><span>⚫ Pendente:</span><span><span id="total_progressPlotagemPercentPendente">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+</div>
 
-        <!-- TOTAL -->
-        <h3 class="text-xl font-bold text-indigo-700 mb-2">Total</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <!-- Treinamento -->
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Treinamento</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="total_progressTreinamentoChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressTreinamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-blue-600"><span>🟦 Em Andamento:</span><span><span id="total_progressTreinamentoPercentAndamento">0.00</span>%</span></p>
-                <p class="flex justify-between text-green-600"><span>✅ Concluído (Ok):</span><span><span id="total_progressTreinamentoPercentOk">0.00</span>% (<span id="total_progressTreinamentoCountOk">0</span>)</span></p>
-                <p class="flex justify-between text-yellow-600"><span>⚠️ Pendente:</span><span><span id="total_progressTreinamentoPercentPendente">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <!-- Acompanhamento -->
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Acompanhamento</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="total_progressAcompanhamentoChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressAcompanhamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-yellow-600"><span>🟡 Realizado:</span><span><span id="total_progressAcompanhamentoPercentRealizado">0.00</span>% (<span id="total_progressAcompanhamentoCountRealizado">0</span>)</span></p>
-                <p class="flex justify-between text-red-600"><span>🔴 Não Realizado:</span><span><span id="total_progressAcompanhamentoPercentNaoRealizado">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <!-- Finalizada -->
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Status Finalizado</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="total_progressFinalizadaChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressFinalizadaCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-blue-600"><span>🟦 Finalizada (Sim):</span><span><span id="total_progressFinalizadaPercentSim">0.00</span>% (<span id="total_progressFinalizadaCountSim">0</span>)</span></p>
-                <p class="flex justify-between text-gray-500"><span>⚪ Não Finalizada:</span><span><span id="total_progressFinalizadaPercentNao">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <!-- Plotagem -->
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Plotagem</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="total_progressPlotagemChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="total_progressPlotagemCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-green-600"><span>✅ Realizado:</span><span><span id="total_progressPlotagemPercentRealizado">0.00</span>% (<span id="total_progressPlotagemCountRealizado">0</span>)</span></p>
-                <p class="flex justify-between text-yellow-600"><span>🟡 Aguardando:</span><span><span id="total_progressPlotagemPercentAguardando">0.00</span>%</span></p>
-                <p class="flex justify-between text-gray-700"><span>⚫ Pendente:</span><span><span id="total_progressPlotagemPercentPendente">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
+<!-- ENTREGA 1 -->
+<h3 class="text-xl font-bold text-indigo-700 mb-2">Entrega 1</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Treinamento</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e1_progressTreinamentoChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressTreinamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-blue-600"><span>🟦 Em Andamento:</span><span><span id="e1_progressTreinamentoPercentAndamento">0.00</span>%</span></p>
+<p class="flex justify-between text-green-600"><span>✅ Concluído (Ok):</span><span><span id="e1_progressTreinamentoPercentOk">0.00</span>% (<span id="e1_progressTreinamentoCountOk">0</span>)</span></p>
+<p class="flex justify-between text-yellow-600"><span>⚠️ Pendente:</span><span><span id="e1_progressTreinamentoPercentPendente">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Acompanhamento</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e1_progressAcompanhamentoChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressAcompanhamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-yellow-600"><span>🟡 Realizado:</span><span><span id="e1_progressAcompanhamentoPercentRealizado">0.00</span>% (<span id="e1_progressAcompanhamentoCountRealizado">0</span>)</span></p>
+<p class="flex justify-between text-red-600"><span>🔴 Não Realizado:</span><span><span id="e1_progressAcompanhamentoPercentNaoRealizado">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Status Finalizado</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e1_progressFinalizadaChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressFinalizadaCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-blue-600"><span>🟦 Finalizada (Sim):</span><span><span id="e1_progressFinalizadaPercentSim">0.00</span>% (<span id="e1_progressFinalizadaCountSim">0</span>)</span></p>
+<p class="flex justify-between text-gray-500"><span>⚪ Não Finalizada:</span><span><span id="e1_progressFinalizadaPercentNao">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Plotagem</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e1_progressPlotagemChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressPlotagemCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-green-600"><span>✅ Realizado:</span><span><span id="e1_progressPlotagemPercentRealizado">0.00</span>% (<span id="e1_progressPlotagemCountRealizado">0</span>)</span></p>
+<p class="flex justify-between text-yellow-600"><span>🟡 Aguardando:</span><span><span id="e1_progressPlotagemPercentAguardando">0.00</span>%</span></p>
+<p class="flex justify-between text-gray-700"><span>⚫ Pendente:</span><span><span id="e1_progressPlotagemPercentPendente">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+</div>
 
-        <!-- ENTREGA 1 -->
-        <h3 class="text-xl font-bold text-indigo-700 mb-2">Entrega 1</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Treinamento</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e1_progressTreinamentoChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressTreinamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-blue-600"><span>🟦 Em Andamento:</span><span><span id="e1_progressTreinamentoPercentAndamento">0.00</span>%</span></p>
-                <p class="flex justify-between text-green-600"><span>✅ Concluído (Ok):</span><span><span id="e1_progressTreinamentoPercentOk">0.00</span>% (<span id="e1_progressTreinamentoCountOk">0</span>)</span></p>
-                <p class="flex justify-between text-yellow-600"><span>⚠️ Pendente:</span><span><span id="e1_progressTreinamentoPercentPendente">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Acompanhamento</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e1_progressAcompanhamentoChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressAcompanhamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-yellow-600"><span>🟡 Realizado:</span><span><span id="e1_progressAcompanhamentoPercentRealizado">0.00</span>% (<span id="e1_progressAcompanhamentoCountRealizado">0</span>)</span></p>
-                <p class="flex justify-between text-red-600"><span>🔴 Não Realizado:</span><span><span id="e1_progressAcompanhamentoPercentNaoRealizado">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Status Finalizado</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e1_progressFinalizadaChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressFinalizadaCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-blue-600"><span>🟦 Finalizada (Sim):</span><span><span id="e1_progressFinalizadaPercentSim">0.00</span>% (<span id="e1_progressFinalizadaCountSim">0</span>)</span></p>
-                <p class="flex justify-between text-gray-500"><span>⚪ Não Finalizada:</span><span><span id="e1_progressFinalizadaPercentNao">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Plotagem</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e1_progressPlotagemChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e1_progressPlotagemCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-green-600"><span>✅ Realizado:</span><span><span id="e1_progressPlotagemPercentRealizado">0.00</span>% (<span id="e1_progressPlotagemCountRealizado">0</span>)</span></p>
-                <p class="flex justify-between text-yellow-600"><span>🟡 Aguardando:</span><span><span id="e1_progressPlotagemPercentAguardando">0.00</span>%</span></p>
-                <p class="flex justify-between text-gray-700"><span>⚫ Pendente:</span><span><span id="e1_progressPlotagemPercentPendente">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
+<!-- ENTREGA 2 -->
+<h3 class="text-xl font-bold text-indigo-700 mb-2">Entrega 2</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Treinamento</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e2_progressTreinamentoChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressTreinamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-blue-600"><span>🟦 Em Andamento:</span><span><span id="e2_progressTreinamentoPercentAndamento">0.00</span>%</span></p>
+<p class="flex justify-between text-green-600"><span>✅ Concluído (Ok):</span><span><span id="e2_progressTreinamentoPercentOk">0.00</span>% (<span id="e2_progressTreinamentoCountOk">0</span>)</span></p>
+<p class="flex justify-between text-yellow-600"><span>⚠️ Pendente:</span><span><span id="e2_progressTreinamentoPercentPendente">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Acompanhamento</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e2_progressAcompanhamentoChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressAcompanhamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-yellow-600"><span>🟡 Realizado:</span><span><span id="e2_progressAcompanhamentoPercentRealizado">0.00</span>% (<span id="e2_progressAcompanhamentoCountRealizado">0</span>)</span></p>
+<p class="flex justify-between text-red-600"><span>🔴 Não Realizado:</span><span><span id="e2_progressAcompanhamentoPercentNaoRealizado">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Status Finalizado</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e2_progressFinalizadaChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressFinalizadaCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-blue-600"><span>🟦 Finalizada (Sim):</span><span><span id="e2_progressFinalizadaPercentSim">0.00</span>% (<span id="e2_progressFinalizadaCountSim">0</span>)</span></p>
+<p class="flex justify-between text-gray-500"><span>⚪ Não Finalizada:</span><span><span id="e2_progressFinalizadaPercentNao">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
+<h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Plotagem</h4>
+<div class="dashboard-card-content">
+<div class="dashboard-chart-area">
+<canvas id="e2_progressPlotagemChart"></canvas>
+<div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressPlotagemCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
+</div>
+<div class="dashboard-stats-list mt-3 space-y-1 text-sm">
+<p class="flex justify-between text-green-600"><span>✅ Realizado:</span><span><span id="e2_progressPlotagemPercentRealizado">0.00</span>% (<span id="e2_progressPlotagemCountRealizado">0</span>)</span></p>
+<p class="flex justify-between text-yellow-600"><span>🟡 Aguardando:</span><span><span id="e2_progressPlotagemPercentAguardando">0.00</span>%</span></p>
+<p class="flex justify-between text-gray-700"><span>⚫ Pendente:</span><span><span id="e2_progressPlotagemPercentPendente">0.00</span>%</span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
 
-        <!-- ENTREGA 2 -->
-        <h3 class="text-xl font-bold text-indigo-700 mb-2">Entrega 2</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Treinamento</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e2_progressTreinamentoChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressTreinamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-blue-600"><span>🟦 Em Andamento:</span><span><span id="e2_progressTreinamentoPercentAndamento">0.00</span>%</span></p>
-                <p class="flex justify-between text-green-600"><span>✅ Concluído (Ok):</span><span><span id="e2_progressTreinamentoPercentOk">0.00</span>% (<span id="e2_progressTreinamentoCountOk">0</span>)</span></p>
-                <p class="flex justify-between text-yellow-600"><span>⚠️ Pendente:</span><span><span id="e2_progressTreinamentoPercentPendente">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Acompanhamento</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e2_progressAcompanhamentoChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressAcompanhamentoCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-yellow-600"><span>🟡 Realizado:</span><span><span id="e2_progressAcompanhamentoPercentRealizado">0.00</span>% (<span id="e2_progressAcompanhamentoCountRealizado">0</span>)</span></p>
-                <p class="flex justify-between text-red-600"><span>🔴 Não Realizado:</span><span><span id="e2_progressAcompanhamentoPercentNaoRealizado">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Status Finalizado</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e2_progressFinalizadaChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressFinalizadaCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-blue-600"><span>🟦 Finalizada (Sim):</span><span><span id="e2_progressFinalizadaPercentSim">0.00</span>% (<span id="e2_progressFinalizadaCountSim">0</span>)</span></p>
-                <p class="flex justify-between text-gray-500"><span>⚪ Não Finalizada:</span><span><span id="e2_progressFinalizadaPercentNao">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-white p-4 rounded-xl shadow-lg border border-blue-200">
-            <h4 class="text-lg font-bold text-gray-700 mb-4 text-center">Progresso Plotagem</h4>
-            <div class="dashboard-card-content">
-              <div class="dashboard-chart-area">
-                <canvas id="e2_progressPlotagemChart"></canvas>
-                <div class="dashboard-chart-center"><span class="text-xl font-bold text-gray-800" id="e2_progressPlotagemCountTotal">0</span><span class="text-xs text-gray-500">Total</span></div>
-              </div>
-              <div class="dashboard-stats-list mt-3 space-y-1 text-sm">
-                <p class="flex justify-between text-green-600"><span>✅ Realizado:</span><span><span id="e2_progressPlotagemPercentRealizado">0.00</span>% (<span id="e2_progressPlotagemCountRealizado">0</span>)</span></p>
-                <p class="flex justify-between text-yellow-600"><span>🟡 Aguardando:</span><span><span id="e2_progressPlotagemPercentAguardando">0.00</span>%</span></p>
-                <p class="flex justify-between text-gray-700"><span>⚫ Pendente:</span><span><span id="e2_progressPlotagemPercentPendente">0.00</span>%</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<!-- CALENDÁRIO -->
+<div id="tabCalendarioContent" class="hidden">
+<h2 class="text-2xl font-bold text-indigo-700 mb-6">Calendário de Planejamento</h2>
+<div class="mb-4 text-sm text-gray-600"><p>Visualização do planejamento das unidades com base nas datas de início e fim.</p></div>
+<div id="calendarioView" class="overflow-x-auto"></div>
+</div>
+</div>
+</div>
 
-      <!-- CALENDÁRIO -->
-      <div id="tabCalendarioContent" class="hidden">
-        <h2 class="text-2xl font-bold text-indigo-700 mb-6">Calendário de Planejamento</h2>
-        <div class="mb-4 text-sm text-gray-600"><p>Visualização do planejamento das unidades com base nas datas de início e fim.</p></div>
-        <div id="calendarioView" class="overflow-x-auto"></div>
-      </div>
-    </div>
-  </div>
+<script>
+const STORAGE = 'tabela_operacional_v4';
 
-  <script>
-    const STORAGE = 'tabela_operacional_v4';
+/* ====== REGISTRO DE GRÁFICOS ====== */
+const chartStore = {
+total: { treinamento: null, acompanhamento: null, finalizada: null, plotagem: null },
+e1:    { treinamento: null, acompanhamento: null, finalizada: null, plotagem: null },
+e2:    { treinamento: null, acompanhamento: null, finalizada: null, plotagem: null },
+};
 
-    /* ====== REGISTRO DE GRÁFICOS ====== */
-    const chartStore = {
-      total: { treinamento: null, acompanhamento: null, finalizada: null, plotagem: null },
-      e1:    { treinamento: null, acompanhamento: null, finalizada: null, plotagem: null },
-      e2:    { treinamento: null, acompanhamento: null, finalizada: null, plotagem: null },
-    };
+function renderDoughnut(scope, key, canvasId, labels, data, colors) {
+const canvas = document.getElementById(canvasId);
+if (!canvas) return;
+const prev = chartStore[scope][key];
+if (prev) prev.destroy();
+chartStore[scope][key] = new Chart(canvas.getContext('2d'), {
+type: 'doughnut',
+data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+options: {
+responsive: true,
+cutout: '80%',
+plugins: {
+legend: { display: false },
+tooltip: { callbacks: { label: (c) => `${c.label}: ${c.parsed} linhas` } }
+}
+}
+});
+}
 
-    function renderDoughnut(scope, key, canvasId, labels, data, colors) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
-      const prev = chartStore[scope][key];
-      if (prev) prev.destroy();
-      chartStore[scope][key] = new Chart(canvas.getContext('2d'), {
-        type: 'doughnut',
-        data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
-        options: {
-          responsive: true,
-          cutout: '80%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: (c) => `${c.label}: ${c.parsed} linhas` } }
-          }
-        }
-      });
-    }
+const filterTreinamentoEl = document.getElementById('filterTreinamento');
+const filterRespEl        = document.getElementById('filterResp');
+const filterFinalizadaEl  = document.getElementById('filterFinalizada');
+const filterPlotagemElContainer = document.createElement('div');
+const clearFiltersBtn     = document.getElementById('clearFilters');
 
-    const filterTreinamentoEl = document.getElementById('filterTreinamento');
-    const filterRespEl        = document.getElementById('filterResp');
-    const filterFinalizadaEl  = document.getElementById('filterFinalizada');
-    const filterEntregaEl     = document.getElementById('filterEntrega'); // NOVO
-    const filterPlotagemElContainer = document.createElement('div');
-    const clearFiltersBtn     = document.getElementById('clearFilters');
+// COLUNAS (Entrega ANTES de Unidade)
+let columns = [
+{ key: 'entrega', label: 'Entrega', type: 'select', width: 50, options: '1,2' },
+{ key: 'unidade', label: 'Unidade', type: 'select', width: 200, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e da Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro, Ajuda C, Nova Esperança, Córrego do Ouro, Dona Alba, UBS Barreto/Barramares' },
+{ key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 45, options: 'UBS,UPA,Hospital' },
+{ key: 'dtinicio', label: 'Data Início', type: 'date', width: 120 },
+{ key: 'dtfim', label: 'Data Fim', type: 'date', width: 120 },
+      { key: '', label: '(Dias)', type: 'display', width: 30 },
+      { key: 'tempo', label: 'Tempo (Dias)', type: 'display', width: 25 },
+{ key: 'treinamento', label: 'Treinamento', type: 'select', width: 40, options: 'Ok,Pendente,Em Andamento' },
+{ key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
+{ key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
+{ key: 'finalizada', label: 'FINALIZADA', type: 'select', width: 40, options: 'Sim ,Não' },
+{ key: 'plotagem', label: 'Plotagem', type: 'select', width: 50, options: 'Realizado, Aguardando, Pendente' },
+{ key: 'acoes', label: 'Ações', type: 'actions', width: 80 }
+];
 
-    // COLUNAS (Entrega ANTES de Unidade)
-    let columns = [
-      { key: 'entrega', label: 'Entrega', type: 'select', width: 50, options: '1,2' },
-      { key: 'unidade', label: 'Unidade', type: 'select', width: 80, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e da Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro' },
-      { key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 90, options: 'UBS,UPA,Hospital' },
-      { key: 'dtinicio', label: 'Data Início', type: 'date', width: 120 },
-      { key: 'dtfim', label: 'Data Fim', type: 'date', width: 120 },
-      { key: 'tempo', label: 'Tempo (Dias)', type: 'display', width: 70 },
-      { key: 'treinamento', label: 'Treinamento', type: 'select', width: 40, options: 'Ok,Pendente,Em Andamento' },
-      { key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
-      { key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
-      { key: 'finalizada', label: 'FINALIZADA', type: 'select', width: 40, options: 'Sim ,Não' },
-      { key: 'plotagem', label: 'Plotagem', type: 'select', width: 50, options: 'Realizado, Aguardando, Pendente' },
-      { key: 'acoes', label: 'Ações', type: 'actions', width: 80 }
-    ];
+// Dados
+let rows = JSON.parse(localStorage.getItem(STORAGE) || '[]');
+if (!rows.length) {
+rows = [
+{ entrega:'1', unidade:'UPA Barra', tipo:'UPA', dtinicio:'2025-10-01', dtfim:'2025-10-15', treinamento:'Ok',           resp:'Alan',    acompanhamento:'Realizado',     finalizada:'Sim', plotagem:'Realizado' },
+{ entrega:'2', unidade:'UBS Novo Cavaleiros', tipo:'UBS', dtinicio:'2025-10-10', dtfim:'',        treinamento:'Em Andamento', resp:'Marcelo', acompanhamento:'Não Realizado', finalizada:'Não', plotagem:'Aguardando' },
+{ entrega:'1', unidade:'HPMS - Hospital Serra', tipo:'Hospital', dtinicio:'2025-11-01', dtfim:'2025-11-03', treinamento:'Pendente',     resp:'Callmed', acompanhamento:'Realizado',     finalizada:'Não', plotagem:'Pendente' },
+];
+persist();
+}
 
-    // Dados
-    let rows = JSON.parse(localStorage.getItem(STORAGE) || '[]');
-    if (!rows.length) {
-      rows = [
-        { entrega:'1', unidade:'UPA Barra', tipo:'UPA', dtinicio:'2025-10-01', dtfim:'2025-10-15', treinamento:'Ok',           resp:'Alan',    acompanhamento:'Realizado',     finalizada:'Sim', plotagem:'Realizado' },
-        { entrega:'2', unidade:'UBS Novo Cavaleiros', tipo:'UBS', dtinicio:'2025-10-10', dtfim:'',        treinamento:'Em Andamento', resp:'Marcelo', acompanhamento:'Não Realizado', finalizada:'Não', plotagem:'Aguardando' },
-        { entrega:'1', unidade:'HPMS - Hospital Serra', tipo:'Hospital', dtinicio:'2025-11-01', dtfim:'2025-11-03', treinamento:'Pendente',     resp:'Callmed', acompanhamento:'Realizado',     finalizada:'Não', plotagem:'Pendente' },
-      ];
-      persist();
-    }
+function persist(){ localStorage.setItem(STORAGE, JSON.stringify(rows)); }
+function tdBase(w){ const td=document.createElement('td'); td.className='border-t'; td.style.minWidth=w+'px'; return td; }
 
-    function persist(){ localStorage.setItem(STORAGE, JSON.stringify(rows)); }
-    function tdBase(w){ const td=document.createElement('td'); td.className='border-t'; td.style.minWidth=w+'px'; return td; }
+function calculateTime(row){
+if(row.dtinicio && row.dtfim){
+const start=new Date(row.dtinicio); const end=new Date(row.dtfim);
+const diffDays=Math.ceil(Math.abs(end-start)/(1000*60*60*24));
+row.tempo=diffDays+1;
+} else row.tempo='';
+}
 
-    function calculateTime(row){
-      if(row.dtinicio && row.dtfim){
-        const start=new Date(row.dtinicio); const end=new Date(row.dtfim);
-        const diffDays=Math.ceil(Math.abs(end-start)/(1000*60*60*24));
-        row.tempo=diffDays+1;
-      } else row.tempo='';
-    }
+function sortRowsByDate(){
+rows.sort((a,b)=>{
+const da=a.dtinicio?new Date(a.dtinicio):null;
+const db=b.dtinicio?new Date(b.dtinicio):null;
+if(da && db) return da-db;
+if(da && !db) return -1;
+if(!da && db) return 1;
+return 0;
+});
+}
 
-    function sortRowsByDate(){
-      rows.sort((a,b)=>{
-        const da=a.dtinicio?new Date(a.dtinicio):null;
-        const db=b.dtinicio?new Date(b.dtinicio):null;
-        if(da && db) return da-db;
-        if(da && !db) return -1;
-        if(!da && db) return 1;
-        return 0;
-      });
-    }
+function renderHead(){
+const tr=document.getElementById('thead'); tr.innerHTML='';
+columns.forEach(c=>{
+const th=document.createElement('th');
+th.textContent=c.label;
+th.className='p-2 text-left font-semibold text-center';
+th.style.minWidth=(c.width||140)+'px';
+tr.appendChild(th);
+});
+}
 
-    function renderHead(){
-      const tr=document.getElementById('thead'); tr.innerHTML='';
-      columns.forEach(c=>{
-        const th=document.createElement('th');
-        th.textContent=c.label;
-        th.className='p-2 text-left font-semibold text-center';
-        th.style.minWidth=(c.width||140)+'px';
-        tr.appendChild(th);
-      });
-    }
+function applyFilters(){
+const fT = filterTreinamentoEl.value;
+const fR = filterRespEl.value;
+const fF = filterFinalizadaEl.value;
+const filterPlot = document.getElementById('filterPlotagem');
+const fP = filterPlot ? filterPlot.value : '';
+let filtered=[...rows];
+if(fT) filtered=filtered.filter(r=>r.treinamento===fT);
+if(fR) filtered=filtered.filter(r=>r.resp===fR);
+if(fF) filtered=filtered.filter(r=>(r.finalizada||'').trim()===fF);
+if(fP) filtered=filtered.filter(r=>r.plotagem===fP);
+return filtered;
+}
 
-    // ====== Filtros (inclui Entrega) ======
-    function applyFilters(){
-      const fT = filterTreinamentoEl.value;
-      const fR = filterRespEl.value;
-      const fF = filterFinalizadaEl.value;
-      const filterPlot = document.getElementById('filterPlotagem');
-      const fP = filterPlot ? filterPlot.value : '';
-      const fE = filterEntregaEl ? filterEntregaEl.value : '';
-
-      let filtered=[...rows];
-      if(fT) filtered = filtered.filter(r => r.treinamento === fT);
-      if(fR) filtered = filtered.filter(r => r.resp === fR);
-      if(fF) filtered = filtered.filter(r => (r.finalizada || '').trim() === fF);
-      if(fP) filtered = filtered.filter(r => r.plotagem === fP);
-      if(fE) filtered = filtered.filter(r => (r.entrega || '').toString() === fE);
-
-      return filtered;
-    }
-
-    function renderRows(){
-      const tb=document.getElementById('tbody'); tb.innerHTML='';
-      sortRowsByDate();
-      const rowsToRender=applyFilters();
-      rowsToRender.forEach(row=>{
-        calculateTime(row);
-        const tr=document.createElement('tr'); tr.className='hover:bg-gray-50';
-        columns.forEach(col=>{
-          const td=tdBase(col.width); td.classList.add('text-center');
-          if(col.type==='date'){
-            const inp=document.createElement('input'); inp.type='date'; inp.className='px-2 py-1 border rounded-lg w-full';
-            inp.value=row[col.key]||''; inp.oninput=()=>{row[col.key]=inp.value; calculateTime(row); persist(); renderRows();};
-            td.appendChild(inp);
-          } else if(col.type==='display'){
-            const span=document.createElement('span'); span.textContent=row[col.key]||'-'; span.className='px-2 py-1 block w-full font-semibold'; td.appendChild(span);
-          } else if(col.type==='select'){
-            const sel=document.createElement('select'); sel.className='px-2 py-1 border rounded-lg bg-white w-full select-mini';
-            (col.options||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op);});
-            sel.value=row[col.key]||''; sel.onchange=()=>{row[col.key]=sel.value; persist(); renderRows();}; td.appendChild(sel);
-          } else if(col.type==='actions'){
-            const btn=document.createElement('button'); btn.innerHTML='🗑️'; btn.title='Excluir linha'; btn.className='px-2 py-1 rounded-lg border hover:bg-red-50 hover:text-red-600';
-            btn.onclick=()=>{ const senha=prompt("Digite a senha para excluir esta linha:"); if(senha==="1"){ if(confirm('Tem certeza que deseja excluir esta linha?')){ const idx=rows.findIndex(r=>r===row); if(idx!==-1){ rows.splice(idx,1); persist(); renderRows(); } } } else if(senha!==null){ alert("Senha incorreta!"); } };
-            td.appendChild(btn);
-          } else {
-            const inp=document.createElement('input'); inp.className='px-2 py-1 border rounded-lg w-full'; inp.value=row[col.key]||'';
-            inp.oninput=()=>{row[col.key]=inp.value; persist(); renderRows();}; td.appendChild(inp);
-          }
-          tr.appendChild(td);
-        });
-        tb.appendChild(tr);
-      });
-      updateAllDashboards();
-    }
-
-    function populateFilterOptions(){
-      [filterTreinamentoEl, filterRespEl, filterFinalizadaEl].forEach(select=>{
-        select.innerHTML='<option value="">Todos</option>';
-      });
-
-      // Plotagem via JS
-      filterPlotagemElContainer.innerHTML=`
-        <label for="filterPlotagem" class="text-sm block">Plotagem:</label>
-        <select id="filterPlotagem" class="select-mini border rounded-lg">
-          <option value="">Todos</option>
-        </select>`;
-      const filterPlotagemElSelect = filterPlotagemElContainer.querySelector('select');
-
+function renderRows(){
+const tb=document.getElementById('tbody'); tb.innerHTML='';
+sortRowsByDate();
+const rowsToRender=applyFilters();
+rowsToRender.forEach(row=>{
+calculateTime(row);
+const tr=document.createElement('tr'); tr.className='hover:bg-gray-50';
 columns.forEach(col=>{
-  if(col.type==='select'){
-    const id='filter'+col.key.charAt(0).toUpperCase()+col.key.slice(1);
-    const target=document.getElementById(id) || (col.key==='plotagem' ? filterPlotagemElSelect : null);
-    if(target){
-      // evita duplicados mesmo se o HTML já tiver opções
-      const existing = new Set([...target.options].map(o => o.value));
-      col.options.split(',').map(s=>s.trim()).filter(Boolean).forEach(opt=>{
-        if(!existing.has(opt)){
-          const op=document.createElement('option'); op.value=opt; op.textContent=opt; target.appendChild(op);
-        }
-      });
-    }
-  }
+const td=tdBase(col.width); td.classList.add('text-center');
+if(col.type==='date'){
+const inp=document.createElement('input'); inp.type='date'; inp.className='px-2 py-1 border rounded-lg w-full';
+inp.value=row[col.key]||''; inp.oninput=()=>{row[col.key]=inp.value; calculateTime(row); persist(); renderRows();};
+td.appendChild(inp);
+} else if(col.type==='display'){
+const span=document.createElement('span'); span.textContent=row[col.key]||'-'; span.className='px-2 py-1 block w-full font-semibold'; td.appendChild(span);
+} else if(col.type==='select'){
+const sel=document.createElement('select'); sel.className='px-2 py-1 border rounded-lg bg-white w-full select-mini';
+(col.options||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; sel.appendChild(op);});
+sel.value=row[col.key]||''; sel.onchange=()=>{row[col.key]=sel.value; persist(); renderRows();}; td.appendChild(sel);
+} else if(col.type==='actions'){
+const btn=document.createElement('button'); btn.innerHTML='🗑️'; btn.title='Excluir linha'; btn.className='px-2 py-1 rounded-lg border hover:bg-red-50 hover:text-red-600';
+btn.onclick=()=>{ const senha=prompt("Digite a senha para excluir esta linha:"); if(senha==="1"){ if(confirm('Tem certeza que deseja excluir esta linha?')){ const idx=rows.findIndex(r=>r===row); if(idx!==-1){ rows.splice(idx,1); persist(); renderRows(); } } } else if(senha!==null){ alert("Senha incorreta!"); } };
+td.appendChild(btn);
+} else {
+const inp=document.createElement('input'); inp.className='px-2 py-1 border rounded-lg w-full'; inp.value=row[col.key]||'';
+inp.oninput=()=>{row[col.key]=inp.value; persist(); renderRows();}; td.appendChild(inp);
+}
+tr.appendChild(td);
+});
+tb.appendChild(tr);
+});
+updateAllDashboards();
+}
+
+function populateFilterOptions(){
+[filterTreinamentoEl, filterRespEl, filterFinalizadaEl].forEach(select=>{
+select.innerHTML='<option value="">Todos</option>';
 });
 
+filterPlotagemElContainer.innerHTML=`
+       <label for="filterPlotagem" class="text-sm block">Plotagem:</label>
+       <select id="filterPlotagem" class="select-mini border rounded-lg">
+         <option value="">Todos</option>
+       </select>`;
+const filterPlotagemElSelect = filterPlotagemElContainer.querySelector('select');
 
-      const filtersContainer=document.querySelector('.flex-wrap.gap-4.mb-3');
-      const clearFiltersButton=document.getElementById('clearFilters');
-      filtersContainer.insertBefore(filterPlotagemElContainer, clearFiltersButton);
+columns.forEach(col=>{
+if(col.type==='select'){
+const id='filter'+col.key.charAt(0).toUpperCase()+col.key.slice(1);
+const target=document.getElementById(id) || (col.key==='plotagem' ? filterPlotagemElSelect : null);
+if(target){
+col.options.split(',').map(s=>s.trim()).filter(Boolean).forEach(opt=>{
+const op=document.createElement('option'); op.value=opt; op.textContent=opt; target.appendChild(op);
+});
+}
+}
+});
 
-      filterTreinamentoEl.onchange=renderRows;
-      filterRespEl.onchange=renderRows;
-      filterFinalizadaEl.onchange=renderRows;
-      filterPlotagemElSelect.onchange=renderRows;
-      filterEntregaEl.onchange=renderRows; // NOVO
+const filtersContainer=document.querySelector('.flex-wrap.gap-4.mb-3');
+const clearFiltersButton=document.getElementById('clearFilters');
+filtersContainer.insertBefore(filterPlotagemElContainer, clearFiltersButton);
 
-      clearFiltersBtn.onclick=()=>{
-        filterTreinamentoEl.value='';
-        filterRespEl.value='';
-        filterFinalizadaEl.value='';
-        filterPlotagemElSelect.value='';
-        filterEntregaEl.value=''; // NOVO
-        renderRows();
-      };
-    }
+filterTreinamentoEl.onchange=renderRows;
+filterRespEl.onchange=renderRows;
+filterFinalizadaEl.onchange=renderRows;
+filterPlotagemElSelect.onchange=renderRows;
 
-    // Estatísticas
-    function computeStats(arr){
-      const total=arr.length;
-      const c=(cond)=>arr.filter(cond).length;
-      const treinamentoOk=c(r=>r.treinamento==="Ok");
-      const treinamentoPendente=c(r=>r.treinamento==="Pendente");
-      const treinamentoAndamento=c(r=>r.treinamento==="Em Andamento");
-      const acompRealizado=c(r=>r.acompanhamento==="Realizado");
-      const acompNao=c(r=>r.acompanhamento==="Não Realizado");
-      const finSim=c(r=>(r.finalizada||"").toString().trim()==="Sim");
-      const finNao=c(r=>(r.finalizada||"").toString().trim()==="Não");
-      const plotRealizado=c(r=>r.plotagem==="Realizado");
-      const plotAguardando=c(r=>r.plotagem==="Aguardando");
-      const plotPendente=c(r=>r.plotagem==="Pendente");
-      const pct=(v)=> total===0?0:(v/total)*100;
-      return {
-        total,
-        treinamentoOk, treinamentoPendente, treinamentoAndamento,
-        acompRealizado, acompNao,
-        finSim, finNao,
-        plotRealizado, plotAguardando, plotPendente,
-        pOk:pct(treinamentoOk), pPend:pct(treinamentoPendente), pAnd:pct(treinamentoAndamento),
-        pAcompR:pct(acompRealizado), pAcompN:pct(acompNao),
-        pFinS:pct(finSim), pFinN:pct(finNao),
-        pPlotR:pct(plotRealizado), pPlotA:pct(plotAguardando), pPlotP:pct(plotPendente)
-      };
-    }
+clearFiltersBtn.onclick=()=>{
+filterTreinamentoEl.value='';
+filterRespEl.value='';
+filterFinalizadaEl.value='';
+filterPlotagemElSelect.value='';
+renderRows();
+};
+}
 
-    function setText(id, v){
-      const el=document.getElementById(id);
-      if(!el) return;
-      el.textContent = (typeof v==='number' ? (Number.isInteger(v)?v:v.toFixed(2)) : v);
-    }
+// Estatísticas
+function computeStats(arr){
+const total=arr.length;
+const c=(cond)=>arr.filter(cond).length;
+const treinamentoOk=c(r=>r.treinamento==="Ok");
+const treinamentoPendente=c(r=>r.treinamento==="Pendente");
+const treinamentoAndamento=c(r=>r.treinamento==="Em Andamento");
+const acompRealizado=c(r=>r.acompanhamento==="Realizado");
+const acompNao=c(r=>r.acompanhamento==="Não Realizado");
+const finSim=c(r=>(r.finalizada||"").toString().trim()==="Sim");
+const finNao=c(r=>(r.finalizada||"").toString().trim()==="Não");
+const plotRealizado=c(r=>r.plotagem==="Realizado");
+const plotAguardando=c(r=>r.plotagem==="Aguardando");
+const plotPendente=c(r=>r.plotagem==="Pendente");
+const pct=(v)=> total===0?0:(v/total)*100;
+return {
+total,
+treinamentoOk, treinamentoPendente, treinamentoAndamento,
+acompRealizado, acompNao,
+finSim, finNao,
+plotRealizado, plotAguardando, plotPendente,
+pOk:pct(treinamentoOk), pPend:pct(treinamentoPendente), pAnd:pct(treinamentoAndamento),
+pAcompR:pct(acompRealizado), pAcompN:pct(acompNao),
+pFinS:pct(finSim), pFinN:pct(finNao),
+pPlotR:pct(plotRealizado), pPlotA:pct(plotAguardando), pPlotP:pct(plotPendente)
+};
+}
 
-    function updateSection(prefix, subset){
-      const s=computeStats(subset);
-      // textos
-      setText(`${prefix}_progressTreinamentoCountTotal`, s.total);
-      setText(`${prefix}_progressTreinamentoCountOk`, s.treinamentoOk);
-      setText(`${prefix}_progressTreinamentoPercentOk`, s.pOk);
-      setText(`${prefix}_progressTreinamentoPercentPendente`, s.pPend);
-      setText(`${prefix}_progressTreinamentoPercentAndamento`, s.pAnd);
+function setText(id, v){
+const el=document.getElementById(id);
+if(!el) return;
+el.textContent = (typeof v==='number' ? (Number.isInteger(v)?v:v.toFixed(2)) : v);
+}
 
-      setText(`${prefix}_progressAcompanhamentoCountTotal`, s.total);
-      setText(`${prefix}_progressAcompanhamentoCountRealizado`, s.acompRealizado);
-      setText(`${prefix}_progressAcompanhamentoPercentRealizado`, s.pAcompR);
-      setText(`${prefix}_progressAcompanhamentoPercentNaoRealizado`, s.pAcompN);
+function updateSection(prefix, subset){
+const s=computeStats(subset);
+// textos
+setText(`${prefix}_progressTreinamentoCountTotal`, s.total);
+setText(`${prefix}_progressTreinamentoCountOk`, s.treinamentoOk);
+setText(`${prefix}_progressTreinamentoPercentOk`, s.pOk);
+setText(`${prefix}_progressTreinamentoPercentPendente`, s.pPend);
+setText(`${prefix}_progressTreinamentoPercentAndamento`, s.pAnd);
 
-      setText(`${prefix}_progressFinalizadaCountTotal`, s.total);
-      setText(`${prefix}_progressFinalizadaCountSim`, s.finSim);
-      setText(`${prefix}_progressFinalizadaPercentSim`, s.pFinS);
-      setText(`${prefix}_progressFinalizadaPercentNao`, s.pFinN);
+setText(`${prefix}_progressAcompanhamentoCountTotal`, s.total);
+setText(`${prefix}_progressAcompanhamentoCountRealizado`, s.acompRealizado);
+setText(`${prefix}_progressAcompanhamentoPercentRealizado`, s.pAcompR);
+setText(`${prefix}_progressAcompanhamentoPercentNaoRealizado`, s.pAcompN);
 
-      setText(`${prefix}_progressPlotagemCountTotal`, s.total);
-      setText(`${prefix}_progressPlotagemCountRealizado`, s.plotRealizado);
-      setText(`${prefix}_progressPlotagemPercentRealizado`, s.pPlotR);
-      setText(`${prefix}_progressPlotagemPercentAguardando`, s.pPlotA);
-      setText(`${prefix}_progressPlotagemPercentPendente`, s.pPlotP);
+setText(`${prefix}_progressFinalizadaCountTotal`, s.total);
+setText(`${prefix}_progressFinalizadaCountSim`, s.finSim);
+setText(`${prefix}_progressFinalizadaPercentSim`, s.pFinS);
+setText(`${prefix}_progressFinalizadaPercentNao`, s.pFinN);
 
-      // gráficos
-      const scope = (prefix === 'total' ? 'total' : (prefix === 'e1' ? 'e1' : 'e2'));
+setText(`${prefix}_progressPlotagemCountTotal`, s.total);
+setText(`${prefix}_progressPlotagemCountRealizado`, s.plotRealizado);
+setText(`${prefix}_progressPlotagemPercentRealizado`, s.pPlotR);
+setText(`${prefix}_progressPlotagemPercentAguardando`, s.pPlotA);
+setText(`${prefix}_progressPlotagemPercentPendente`, s.pPlotP);
 
-      renderDoughnut(scope,'treinamento',`${prefix}_progressTreinamentoChart`,
-        ['Concluído (Ok)','Pendente','Em Andamento'],
-        [s.treinamentoOk, s.treinamentoPendente, s.treinamentoAndamento],
-        ['#10B981','#FCD34D','#3B82F6']
-      );
-      renderDoughnut(scope,'acompanhamento',`${prefix}_progressAcompanhamentoChart`,
-        ['Realizado','Não Realizado'],
-        [s.acompRealizado, s.acompNao],
-        ['#F59E0B','#EF4444']
-      );
-      renderDoughnut(scope,'finalizada',`${prefix}_progressFinalizadaChart`,
-        ['Finalizada (Sim)','Não Finalizada'],
-        [s.finSim, s.finNao],
-        ['#3B82F6','#6B7280']
-      );
-      renderDoughnut(scope,'plotagem',`${prefix}_progressPlotagemChart`,
-        ['Realizado','Aguardando','Pendente'],
-        [s.plotRealizado, s.plotAguardando, s.plotPendente],
-        ['#10B981','#F59E0B','#6B7280']
-      );
-    }
+// gráficos
+const scope = (prefix === 'total' ? 'total' : (prefix === 'e1' ? 'e1' : 'e2'));
 
-    function updateAllDashboards(){
-      const all = [...rows];
-      const filtered = applyFilters(); // respeita filtros rápidos
-      const e1  = filtered.filter(r => (r.entrega||'').toString()==='1');
-      const e2  = filtered.filter(r => (r.entrega||'').toString()==='2');
+renderDoughnut(scope,'treinamento',`${prefix}_progressTreinamentoChart`,
+['Concluído (Ok)','Pendente','Em Andamento'],
+[s.treinamentoOk, s.treinamentoPendente, s.treinamentoAndamento],
+['#10B981','#FCD34D','#3B82F6']
+);
+renderDoughnut(scope,'acompanhamento',`${prefix}_progressAcompanhamentoChart`,
+['Realizado','Não Realizado'],
+[s.acompRealizado, s.acompNao],
+['#F59E0B','#EF4444']
+);
+renderDoughnut(scope,'finalizada',`${prefix}_progressFinalizadaChart`,
+['Finalizada (Sim)','Não Finalizada'],
+[s.finSim, s.finNao],
+['#3B82F6','#6B7280']
+);
+renderDoughnut(scope,'plotagem',`${prefix}_progressPlotagemChart`,
+['Realizado','Aguardando','Pendente'],
+[s.plotRealizado, s.plotAguardando, s.plotPendente],
+['#10B981','#F59E0B','#6B7280']
+);
+}
 
-      // Total deve refletir o conjunto filtrado também
-      updateSection('total', filtered);
-      updateSection('e1', e1);
-      updateSection('e2', e2);
-    }
+function updateAllDashboards(){
+const all = [...rows];
+const e1  = rows.filter(r => (r.entrega||'').toString()==='1');
+const e2  = rows.filter(r => (r.entrega||'').toString()==='2');
+updateSection('total', all);
+updateSection('e1', e1);
+updateSection('e2', e2);
+}
 
-    // Calendário
-    const unitColors=['#FF5733','#33FF57','#3357FF','#FF33A1','#33FFF6','#FFC300','#C70039','#900C3F','#581845','#008080','#FF8C00','#4B0082','#800000','#00FF00','#00FFFF','#FF00FF'];
-    function getColorForUnit(name){ let h=0; for(let i=0;i<name.length;i++) h=name.charCodeAt(i)+((h<<5)-h); return unitColors[Math.abs(h)%unitColors.length]; }
+// Calendário
+const unitColors=['#FF5733','#33FF57','#3357FF','#FF33A1','#33FFF6','#FFC300','#C70039','#900C3F','#581845','#008080','#FF8C00','#4B0082','#800000','#00FF00','#00FFFF','#FF00FF'];
+function getColorForUnit(name){ let h=0; for(let i=0;i<name.length;i++) h=name.charCodeAt(i)+((h<<5)-h); return unitColors[Math.abs(h)%unitColors.length]; }
 
-    function renderCalendar(){
-      const calendarioView=document.getElementById('calendarioView');
-      const validRows=applyFilters().filter(r=>r.dtinicio && r.dtfim);
-      if(!validRows.length){ calendarioView.innerHTML='<div class="text-center text-gray-500 py-8">Nenhum registro com datas de início e fim encontrado.</div>'; return; }
-      let minDate=new Date(validRows[0].dtinicio), maxDate=new Date(validRows[0].dtfim);
-      validRows.forEach(r=>{ const i=new Date(r.dtinicio), f=new Date(r.dtfim); if(i<minDate)minDate=i; if(f>maxDate)maxDate=f; });
+function renderCalendar(){
+const calendarioView=document.getElementById('calendarioView');
+const validRows=applyFilters().filter(r=>r.dtinicio && r.dtfim);
+if(!validRows.length){ calendarioView.innerHTML='<div class="text-center text-gray-500 py-8">Nenhum registro com datas de início e fim encontrado.</div>'; return; }
+let minDate=new Date(validRows[0].dtinicio), maxDate=new Date(validRows[0].dtfim);
+validRows.forEach(r=>{ const i=new Date(r.dtinicio), f=new Date(r.dtfim); if(i<minDate)minDate=i; if(f>maxDate)maxDate=f; });
 
-      const months=[]; const cm=new Date(minDate.getFullYear(),minDate.getMonth(),1); const em=new Date(maxDate.getFullYear(),maxDate.getMonth(),1);
-      while(cm<=em){ months.push(new Date(cm)); cm.setMonth(cm.getMonth()+1); }
+const months=[]; const cm=new Date(minDate.getFullYear(),minDate.getMonth(),1); const em=new Date(maxDate.getFullYear(),maxDate.getMonth(),1);
+while(cm<=em){ months.push(new Date(cm)); cm.setMonth(cm.getMonth()+1); }
 
-      let html='';
-      months.forEach(m=>{
-        const y=m.getFullYear(), mo=m.getMonth();
-        const title=m.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-        html+='<div class="mb-8">';
-        html+=`<h3 class="text-xl font-bold text-indigo-700 mb-4 capitalize">${title}</h3>`;
-        html+='<div class="calendar-month-container"><table class="calendar-month-table">';
-        html+='<thead><tr>'; ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d=> html+=`<th class="calendar-weekday-header">${d}</th>`); html+='</tr></thead><tbody>';
+let html='';
+months.forEach(m=>{
+const y=m.getFullYear(), mo=m.getMonth();
+const title=m.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+html+='<div class="mb-8">';
+html+=`<h3 class="text-xl font-bold text-indigo-700 mb-4 capitalize">${title}</h3>`;
+html+='<div class="calendar-month-container"><table class="calendar-month-table">';
+html+='<thead><tr>'; ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d=> html+=`<th class="calendar-weekday-header">${d}</th>`); html+='</tr></thead><tbody>';
 
-        const first=new Date(y,mo,1), last=new Date(y,mo+1,0);
-        const firstDow=first.getDay(), totalDays=last.getDate();
-        let day=1, wk=0;
-        while(day<=totalDays){
-          html+='<tr class="calendar-week-row">';
-          for(let dow=0; dow<7; dow++){
-            if(wk===0 && dow<firstDow){ html+='<td class="calendar-day-cell-empty"></td>'; }
-            else if(day>totalDays){ html+='<td class="calendar-day-cell-empty"></td>'; }
-            else{
-              const dt=new Date(y,mo,day); const dateStr=dt.toISOString().split('T')[0];
-              html+='<td class="calendar-day-cell-month">';
-              html+=`<div class="calendar-day-number">${day}</div><div class="calendar-day-events">`;
-              validRows.forEach(r=>{
-                if(dateStr>=r.dtinicio && dateStr<=r.dtfim){
-                  const c=getColorForUnit(r.unidade||''); const label=r.unidade||'Unidade';
-                  html+=`<div class="calendar-event-badge" style="background:${c};color:#fff" title="${r.unidade} - ${r.treinamento}">${label}</div>`;
-                }
-              });
-              html+='</div></td>'; day++;
-            }
-          }
-          html+='</tr>'; wk++;
-        }
-        html+='</tbody></table></div></div>';
-      });
-      calendarioView.innerHTML=html;
-    }
+const first=new Date(y,mo,1), last=new Date(y,mo+1,0);
+const firstDow=first.getDay(), totalDays=last.getDate();
+let day=1, wk=0;
+while(day<=totalDays){
+html+='<tr class="calendar-week-row">';
+for(let dow=0; dow<7; dow++){
+if(wk===0 && dow<firstDow){ html+='<td class="calendar-day-cell-empty"></td>'; }
+else if(day>totalDays){ html+='<td class="calendar-day-cell-empty"></td>'; }
+else{
+const dt=new Date(y,mo,day); const dateStr=dt.toISOString().split('T')[0];
+html+='<td class="calendar-day-cell-month">';
+html+=`<div class="calendar-day-number">${day}</div><div class="calendar-day-events">`;
+validRows.forEach(r=>{
+if(dateStr>=r.dtinicio && dateStr<=r.dtfim){
+const c=getColorForUnit(r.unidade||''); const label=r.unidade||'Unidade';
+html+=`<div class="calendar-event-badge" style="background:${c};color:#fff" title="${r.unidade} - ${r.treinamento}">${label}</div>`;
+}
+});
+html+='</div></td>'; day++;
+}
+}
+html+='</tr>'; wk++;
+}
+html+='</tbody></table></div></div>';
+});
+calendarioView.innerHTML=html;
+}
 
-    // Exportações
-    function createDownloadLink(content, type, extension){
-      const BOM="\uFEFF"; const blob=new Blob([BOM,content],{type}); const url=URL.createObjectURL(blob);
-      const link=document.createElement('a'); link.href=url; link.download=`tabela_operacional_${new Date().toISOString().slice(0,10)}.${extension}`;
-      document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-    }
+// Exportações
+function createDownloadLink(content, type, extension){
+const BOM="\uFEFF"; const blob=new Blob([BOM,content],{type}); const url=URL.createObjectURL(blob);
+const link=document.createElement('a'); link.href=url; link.download=`tabela_operacional_${new Date().toISOString().slice(0,10)}.${extension}`;
+document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+}
 
-    function computeStatsForExport(filtered){
-      const s=computeStats(filtered);
-      function pct(v){ return s.total===0? "0.00%": ((v/s.total)*100).toFixed(2)+"%"; }
-      return [
-        { Indicador:"Treinamento - Concluído (Ok)", Contagem:s.treinamentoOk, Percentual:pct(s.treinamentoOk)},
-        { Indicador:"Treinamento - Pendente",        Contagem:s.treinamentoPendente, Percentual:pct(s.treinamentoPendente)},
-        { Indicador:"Treinamento - Em Andamento",    Contagem:s.treinamentoAndamento, Percentual:pct(s.treinamentoAndamento)},
-        { Indicador:"Acompanhamento - Realizado",    Contagem:s.acompRealizado, Percentual:pct(s.acompRealizado)},
-        { Indicador:"Acompanhamento - Não Realizado",Contagem:s.acompNao,       Percentual:pct(s.acompNao)},
-        { Indicador:"Finalizada - Sim",              Contagem:s.finSim,         Percentual:pct(s.finSim)},
-        { Indicador:"Finalizada - Não",              Contagem:s.finNao,         Percentual:pct(s.finNao)},
-        { Indicador:"Plotagem - Realizado",          Contagem:s.plotRealizado,  Percentual:pct(s.plotRealizado)},
-        { Indicador:"Plotagem - Aguardando",         Contagem:s.plotAguardando, Percentual:pct(s.plotAguardando)},
-        { Indicador:"Plotagem - Pendente",           Contagem:s.plotPendente,   Percentual:pct(s.plotPendente)},
-        { Indicador:"Total de Registros (após filtros)", Contagem:s.total, Percentual: s.total? "100.00%":"0.00%"}
-      ];
-    }
+function computeStatsForExport(filtered){
+const s=computeStats(filtered);
+function pct(v){ return s.total===0? "0.00%": ((v/s.total)*100).toFixed(2)+"%"; }
+return [
+{ Indicador:"Treinamento - Concluído (Ok)", Contagem:s.treinamentoOk, Percentual:pct(s.treinamentoOk)},
+{ Indicador:"Treinamento - Pendente",        Contagem:s.treinamentoPendente, Percentual:pct(s.treinamentoPendente)},
+{ Indicador:"Treinamento - Em Andamento",    Contagem:s.treinamentoAndamento, Percentual:pct(s.treinamentoAndamento)},
+{ Indicador:"Acompanhamento - Realizado",    Contagem:s.acompRealizado, Percentual:pct(s.acompRealizado)},
+{ Indicador:"Acompanhamento - Não Realizado",Contagem:s.acompNao,       Percentual:pct(s.acompNao)},
+{ Indicador:"Finalizada - Sim",              Contagem:s.finSim,         Percentual:pct(s.finSim)},
+{ Indicador:"Finalizada - Não",              Contagem:s.finNao,         Percentual:pct(s.finNao)},
+{ Indicador:"Plotagem - Realizado",          Contagem:s.plotRealizado,  Percentual:pct(s.plotRealizado)},
+{ Indicador:"Plotagem - Aguardando",         Contagem:s.plotAguardando, Percentual:pct(s.plotAguardando)},
+{ Indicador:"Plotagem - Pendente",           Contagem:s.plotPendente,   Percentual:pct(s.plotPendente)},
+{ Indicador:"Total de Registros (após filtros)", Contagem:s.total, Percentual: s.total? "100.00%":"0.00%"}
+];
+}
 
-    function stringifyTable(headers, rowsArr, sep){
-      const head=headers.join(sep);
-      const lines=rowsArr.map(obj=> headers.map(h=>{
-        let v=obj[h]??""; v=String(v).replace(/"/g,'""'); if(v.includes(sep)||v.includes('"')||v.includes('\n')) v=`"${v}"`; return v;
-      }).join(sep));
-      return [head,...lines].join('\n');
-    }
+function stringifyTable(headers, rowsArr, sep){
+const head=headers.join(sep);
+const lines=rowsArr.map(obj=> headers.map(h=>{
+let v=obj[h]??""; v=String(v).replace(/"/g,'""'); if(v.includes(sep)||v.includes('"')||v.includes('\n')) v=`"${v}"`; return v;
+}).join(sep));
+return [head,...lines].join('\n');
+}
 
-    function prepareDataAll(separator){
-      const exportableColumns=columns.filter(c=>c.key!=='acoes');
-      const rowsToExport=applyFilters().map(r=>{ calculateTime(r); const obj={}; exportableColumns.forEach(c=>obj[c.label]=r[c.key]??""); return obj; });
-      const tabelaCsv=stringifyTable(exportableColumns.map(c=>c.label), rowsToExport, separator);
+function prepareDataAll(separator){
+const exportableColumns=columns.filter(c=>c.key!=='acoes');
+const rowsToExport=applyFilters().map(r=>{ calculateTime(r); const obj={}; exportableColumns.forEach(c=>obj[c.label]=r[c.key]??""); return obj; });
+const tabelaCsv=stringifyTable(exportableColumns.map(c=>c.label), rowsToExport, separator);
 
-      const dashRows=computeStatsForExport(applyFilters());
-      const dashHeaders=["Indicador","Contagem","Percentual"];
-      const dashCsv=stringifyTable(dashHeaders,dashRows,separator);
+const dashRows=computeStatsForExport(applyFilters());
+const dashHeaders=["Indicador","Contagem","Percentual"];
+const dashCsv=stringifyTable(dashHeaders,dashRows,separator);
 
-      const calRows=[]; applyFilters().filter(r=>r.dtinicio&&r.dtfim).forEach(r=>{
-        const start=new Date(r.dtinicio), end=new Date(r.dtfim);
-        for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
-          calRows.push({ Data:d.toISOString().slice(0,10), Unidade:r.unidade||"", Treinamento:r.treinamento||"", Responsável:r.resp||"", Acompanhamento:r.acompanhamento||"", Finalizada:(r.finalizada||"").toString().trim(), Plotagem:r.plotagem||"" });
-        }
-      });
-      const calHeaders=["Data","Unidade","Treinamento","Responsável","Acompanhamento","Finalizada","Plotagem"];
-      const calCsv=calRows.length? stringifyTable(calHeaders,calRows,separator) : "Sem eventos de calendário no intervalo selecionado.";
+const calRows=[]; applyFilters().filter(r=>r.dtinicio&&r.dtfim).forEach(r=>{
+const start=new Date(r.dtinicio), end=new Date(r.dtfim);
+for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+calRows.push({ Data:d.toISOString().slice(0,10), Unidade:r.unidade||"", Treinamento:r.treinamento||"", Responsável:r.resp||"", Acompanhamento:r.acompanhamento||"", Finalizada:(r.finalizada||"").toString().trim(), Plotagem:r.plotagem||"" });
+}
+});
+const calHeaders=["Data","Unidade","Treinamento","Responsável","Acompanhamento","Finalizada","Plotagem"];
+const calCsv=calRows.length? stringifyTable(calHeaders,calRows,separator) : "Sem eventos de calendário no intervalo selecionado.";
 
-      return ["=== TABELA DE PROCESSOS ===",tabelaCsv,"","=== DASHBOARD DE STATUS ===",dashCsv,"","=== CALENDÁRIO (EVENTOS POR DIA) ===",calCsv].join('\n');
-    }
+return ["=== TABELA DE PROCESSOS ===",tabelaCsv,"","=== DASHBOARD DE STATUS ===",dashCsv,"","=== CALENDÁRIO (EVENTOS POR DIA) ===",calCsv].join('\n');
+}
 
-    function exportToCsv(){ const content=prepareDataAll(','); createDownloadLink(content,'text/csv;charset=utf-8;','csv'); }
-    function exportToExcel(){ const content=prepareDataAll(';'); createDownloadLink(content,'application/vnd.ms-excel;charset=utf-8;','xls'); }
+function exportToCsv(){ const content=prepareDataAll(','); createDownloadLink(content,'text/csv;charset=utf-8;','csv'); }
+function exportToExcel(){ const content=prepareDataAll(';'); createDownloadLink(content,'application/vnd.ms-excel;charset=utf-8;','xls'); }
 
-    async function exportToPDF(){
-      if(typeof window.jspdf==='undefined'||typeof window.jspdf.jsPDF==='undefined'){ alert('jsPDF não carregado.'); return; }
-      const { jsPDF }=window.jspdf;
-      const doc=new jsPDF('l','pt','a4'); const pageW=doc.internal.pageSize.getWidth(); const pageH=doc.internal.pageSize.getHeight(); const margin=40;
-      const addImageMultipage=(imgData)=>{ const imgProps=doc.getImageProperties(imgData); const pdfW=pageW-margin*2; const pdfH=(imgProps.height*pdfW)/imgProps.width;
-        let hLeft=pdfH; let y=margin; doc.addImage(imgData,'PNG',margin,y,pdfW,pdfH); hLeft-= (pageH-margin*2);
-        while(hLeft>0){ doc.addPage('l','a4'); y=margin-(pdfH-hLeft); doc.addImage(imgData,'PNG',margin,y,pdfW,pdfH); hLeft-= (pageH-margin*2); }
-      };
+async function exportToPDF(){
+if(typeof window.jspdf==='undefined'||typeof window.jspdf.jsPDF==='undefined'){ alert('jsPDF não carregado.'); return; }
+const { jsPDF }=window.jspdf;
+const doc=new jsPDF('l','pt','a4'); const pageW=doc.internal.pageSize.getWidth(); const pageH=doc.internal.pageSize.getHeight(); const margin=40;
+const addImageMultipage=(imgData)=>{ const imgProps=doc.getImageProperties(imgData); const pdfW=pageW-margin*2; const pdfH=(imgProps.height*pdfW)/imgProps.width;
+let hLeft=pdfH; let y=margin; doc.addImage(imgData,'PNG',margin,y,pdfW,pdfH); hLeft-= (pageH-margin*2);
+while(hLeft>0){ doc.addPage('l','a4'); y=margin-(pdfH-hLeft); doc.addImage(imgData,'PNG',margin,y,pdfW,pdfH); hLeft-= (pageH-margin*2); }
+};
 
-      const exportableColumns=columns.filter(c=>c.key!=='acoes');
-      const head1=[exportableColumns.map(c=>c.label)];
-      const body1=applyFilters().map(r=>{ calculateTime(r); return exportableColumns.map(c=>String(r[c.key]??"")); });
+const exportableColumns=columns.filter(c=>c.key!=='acoes');
+const head1=[exportableColumns.map(c=>c.label)];
+const body1=applyFilters().map(r=>{ calculateTime(r); return exportableColumns.map(c=>String(r[c.key]??"")); });
 
-      doc.setFontSize(16); doc.text("MEEDS - Controle Operacional", margin, 35);
-      doc.setFontSize(12); doc.text("Tabela de Processos", margin, 55);
-      doc.autoTable({ head:head1, body:body1, startY:65, styles:{fontSize:8,cellPadding:4,halign:'center'}, headStyles:{fillColor:[59,130,246]}, theme:'striped', margin:{left:margin,right:margin} });
+doc.setFontSize(16); doc.text("MEEDS - Controle Operacional", margin, 35);
+doc.setFontSize(12); doc.text("Tabela de Processos", margin, 55);
+doc.autoTable({ head:head1, body:body1, startY:65, styles:{fontSize:8,cellPadding:4,halign:'center'}, headStyles:{fillColor:[59,130,246]}, theme:'striped', margin:{left:margin,right:margin} });
 
-      const currentTab=!document.getElementById('tabPrincipalContent').classList.contains('hidden') ? 'principal' :
-                      !document.getElementById('tabDashboardContent').classList.contains('hidden') ? 'dashboard' : 'calendario';
+const currentTab=!document.getElementById('tabPrincipalContent').classList.contains('hidden') ? 'principal' :
+!document.getElementById('tabDashboardContent').classList.contains('hidden') ? 'dashboard' : 'calendario';
 
-      doc.addPage('l','a4'); doc.text("Dashboard de Status (Imagem)", margin, 30);
-      showTab('dashboard'); await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,140)));
-      const dashEl=document.getElementById('tabDashboardContent');
-      const dashCanvas=await html2canvas(dashEl,{backgroundColor:'#ffffff',scale:2,windowWidth:dashEl.scrollWidth,windowHeight:dashEl.scrollHeight});
-      addImageMultipage(dashCanvas.toDataURL('image/png',1.0));
+doc.addPage('l','a4'); doc.text("Dashboard de Status (Imagem)", margin, 30);
+showTab('dashboard'); await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,140)));
+const dashEl=document.getElementById('tabDashboardContent');
+const dashCanvas=await html2canvas(dashEl,{backgroundColor:'#ffffff',scale:2,windowWidth:dashEl.scrollWidth,windowHeight:dashEl.scrollHeight});
+addImageMultipage(dashCanvas.toDataURL('image/png',1.0));
 
-      doc.addPage('l','a4'); doc.text("Calendário (Imagem)", margin, 30);
-      showTab('calendario'); renderCalendar(); await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,140)));
-      const calEl=document.getElementById('tabCalendarioContent');
-      const calCanvas=await html2canvas(calEl,{backgroundColor:'#ffffff',scale:2,windowWidth:calEl.scrollWidth,windowHeight:calEl.scrollHeight});
-      addImageMultipage(calCanvas.toDataURL('image/png',1.0));
+doc.addPage('l','a4'); doc.text("Calendário (Imagem)", margin, 30);
+showTab('calendario'); renderCalendar(); await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,140)));
+const calEl=document.getElementById('tabCalendarioContent');
+const calCanvas=await html2canvas(calEl,{backgroundColor:'#ffffff',scale:2,windowWidth:calEl.scrollWidth,windowHeight:calEl.scrollHeight});
+addImageMultipage(calCanvas.toDataURL('image/png',1.0));
 
-      showTab(currentTab);
-      doc.save(`meeds_controle_operacional_${new Date().toISOString().slice(0,10)}.pdf`);
-    }
+showTab(currentTab);
+doc.save(`meeds_controle_operacional_${new Date().toISOString().slice(0,10)}.pdf`);
+}
 
-    // Abas e eventos
-    const downloadButton=document.getElementById('downloadButton');
-    const downloadMenu=document.getElementById('downloadMenu');
-    const exportCsvBtn=document.getElementById('exportCsvBtn');
-    const exportXlsBtn=document.getElementById('exportXlsBtn');
-    const exportPdfBtn=document.getElementById('exportPdfBtn');
+// Abas e eventos
+const downloadButton=document.getElementById('downloadButton');
+const downloadMenu=document.getElementById('downloadMenu');
+const exportCsvBtn=document.getElementById('exportCsvBtn');
+const exportXlsBtn=document.getElementById('exportXlsBtn');
+const exportPdfBtn=document.getElementById('exportPdfBtn');
 
-    downloadButton.onclick=(e)=>{ e.stopPropagation(); downloadMenu.classList.toggle('hidden'); };
-    document.addEventListener('click',(e)=>{ if(downloadMenu && !downloadMenu.contains(e.target) && !downloadButton.contains(e.target)) downloadMenu.classList.add('hidden'); });
-    exportCsvBtn.onclick=(e)=>{ e.preventDefault(); exportToCsv(); downloadMenu.classList.add('hidden'); };
-    exportXlsBtn.onclick=(e)=>{ e.preventDefault(); exportToExcel(); downloadMenu.classList.add('hidden'); };
-    exportPdfBtn.onclick=(e)=>{ e.preventDefault(); exportToPDF(); downloadMenu.classList.add('hidden'); };
+downloadButton.onclick=(e)=>{ e.stopPropagation(); downloadMenu.classList.toggle('hidden'); };
+document.addEventListener('click',(e)=>{ if(downloadMenu && !downloadMenu.contains(e.target) && !downloadButton.contains(e.target)) downloadMenu.classList.add('hidden'); });
+exportCsvBtn.onclick=(e)=>{ e.preventDefault(); exportToCsv(); downloadMenu.classList.add('hidden'); };
+exportXlsBtn.onclick=(e)=>{ e.preventDefault(); exportToExcel(); downloadMenu.classList.add('hidden'); };
+exportPdfBtn.onclick=(e)=>{ e.preventDefault(); exportToPDF(); downloadMenu.classList.add('hidden'); };
 
-    const tabPrincipal=document.getElementById('tabPrincipal');
-    const tabDashboard=document.getElementById('tabDashboard');
-    const tabCalendario=document.getElementById('tabCalendario');
-    const tabPrincipalContent=document.getElementById('tabPrincipalContent');
-    const tabDashboardContent=document.getElementById('tabDashboardContent');
-    const tabCalendarioContent=document.getElementById('tabCalendarioContent');
+const tabPrincipal=document.getElementById('tabPrincipal');
+const tabDashboard=document.getElementById('tabDashboard');
+const tabCalendario=document.getElementById('tabCalendario');
+const tabPrincipalContent=document.getElementById('tabPrincipalContent');
+const tabDashboardContent=document.getElementById('tabDashboardContent');
+const tabCalendarioContent=document.getElementById('tabCalendarioContent');
 
-    function showTab(tabName){
-      [tabPrincipal,tabDashboard,tabCalendario].forEach(t=>{ t.classList.remove('bg-white','shadow-sm','font-semibold','text-white','bg-indigo-600','shadow-md'); t.classList.add('bg-gray-100','text-gray-700','hover:bg-gray-200'); });
-      [tabPrincipalContent,tabDashboardContent,tabCalendarioContent].forEach(c=>c.classList.add('hidden'));
+function showTab(tabName){
+[tabPrincipal,tabDashboard,tabCalendario].forEach(t=>{ t.classList.remove('bg-white','shadow-sm','font-semibold','text-white','bg-indigo-600','shadow-md'); t.classList.add('bg-gray-100','text-gray-700','hover:bg-gray-200'); });
+[tabPrincipalContent,tabDashboardContent,tabCalendarioContent].forEach(c=>c.classList.add('hidden'));
 
-      if(tabName==='principal'){
-        tabPrincipalContent.classList.remove('hidden');
-        tabPrincipal.classList.add('bg-white','shadow-sm','font-semibold','text-gray-700');
-        tabPrincipal.classList.remove('bg-gray-100','hover:bg-gray-200');
-        renderRows();
-      } else if(tabName==='dashboard'){
-        tabDashboardContent.classList.remove('hidden');
-        tabDashboard.classList.add('bg-indigo-600','shadow-md','text-white');
-        tabDashboard.classList.remove('bg-gray-100','hover:bg-gray-200');
-        updateAllDashboards();
-        setTimeout(()=>{ ['total','e1','e2'].forEach(scope=>{ Object.values(chartStore[scope]).forEach(ch=> ch && ch.resize()); }); }, 60);
-      } else if(tabName==='calendario'){
-        tabCalendarioContent.classList.remove('hidden');
-        tabCalendario.classList.add('bg-white','shadow-sm','font-semibold','text-gray-700');
-        tabCalendario.classList.remove('bg-gray-100','hover:bg-gray-200');
-        renderCalendar();
-      }
-    }
+if(tabName==='principal'){
+tabPrincipalContent.classList.remove('hidden');
+tabPrincipal.classList.add('bg-white','shadow-sm','font-semibold','text-gray-700');
+tabPrincipal.classList.remove('bg-gray-100','hover:bg-gray-200');
+renderRows();
+} else if(tabName==='dashboard'){
+tabDashboardContent.classList.remove('hidden');
+tabDashboard.classList.add('bg-indigo-600','shadow-md','text-white');
+tabDashboard.classList.remove('bg-gray-100','hover:bg-gray-200');
+updateAllDashboards();
+setTimeout(()=>{ ['total','e1','e2'].forEach(scope=>{ Object.values(chartStore[scope]).forEach(ch=> ch && ch.resize()); }); }, 60);
+} else if(tabName==='calendario'){
+tabCalendarioContent.classList.remove('hidden');
+tabCalendario.classList.add('bg-white','shadow-sm','font-semibold','text-gray-700');
+tabCalendario.classList.remove('bg-gray-100','hover:bg-gray-200');
+renderCalendar();
+}
+}
 
-    tabPrincipal.onclick=()=>showTab('principal');
-    tabDashboard.onclick=()=>showTab('dashboard');
-    tabCalendario.onclick=()=>showTab('calendario');
+tabPrincipal.onclick=()=>showTab('principal');
+tabDashboard.onclick=()=>showTab('dashboard');
+tabCalendario.onclick=()=>showTab('calendario');
 
-    document.getElementById('addRow').onclick=()=>{ rows.push({ entrega:'1', plotagem:'Aguardando' }); persist(); renderRows(); };
+document.getElementById('addRow').onclick=()=>{ rows.push({ entrega:'1', plotagem:'Aguardando' }); persist(); renderRows(); };
 
-    document.getElementById('clr').onclick=()=>{
-      const senha=prompt("🚨 Digite a senha para APAGAR TODOS os dados:");
-      if(senha==="1q2w3e4r@"){
-        if(confirm('⚠️ ATENÇÃO: Tem certeza que deseja APAGAR TODOS os dados da tabela? Esta ação é IRREVERSÍVEL!')){
-          rows=[]; persist(); renderRows(); showTab('principal'); alert("✅ Todos os dados foram apagados com sucesso!");
-        }
-      } else if(senha!==null){ alert("❌ Senha incorreta! Os dados não foram apagados."); }
-    };
+document.getElementById('clr').onclick=()=>{
+const senha=prompt("🚨 Digite a senha para APAGAR TODOS os dados:");
+if(senha==="1q2w3e4r@"){
+if(confirm('⚠️ ATENÇÃO: Tem certeza que deseja APAGAR TODOS os dados da tabela? Esta ação é IRREVERSÍVEL!')){
+rows=[]; persist(); renderRows(); showTab('principal'); alert("✅ Todos os dados foram apagados com sucesso!");
+}
+} else if(senha!==null){ alert("❌ Senha incorreta! Os dados não foram apagados."); }
+};
 
-    // Inicialização
-    populateFilterOptions();
-    renderHead();
-    showTab('principal');
-  </script>
+// Inicialização
+populateFilterOptions();
+renderHead();
+showTab('principal');
+</script>
 </body>
 </html>
+
+
+
+
+
