@@ -72,10 +72,18 @@
             <label for="filterResp" class="text-sm block">Responsáveis:</label>
             <select id="filterResp" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
           </div>
-          <div>
-            <label for="filterFinalizada" class="text-sm block">Finalizada:</label>
-            <select id="filterFinalizada" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
-          </div>
+            <div>
+              <label for="filterFinalizada" class="text-sm block">Finalizada:</label>
+              <select id="filterFinalizada" class="select-mini border rounded-lg border-blue-200"><option value="">Todos</option></select>
+            </div>
+            <!-- NOVO: filtro Entrega -->
+            <div>
+<label for="filterEntrega" class="text-sm block">Entrega:</label>
+<select id="filterEntrega" class="select-mini border rounded-lg border-blue-200">
+  <option value="">Todas</option>
+</select>
+
+            </div>
           <!-- Plotagem será inserido via JS -->
           <button id="clearFilters" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-bold py-1.5 px-3 rounded-lg transition duration-150 mt-3 sm:mt-0 border border-blue-300">Limpar Filtros</button>
         </div>
@@ -326,17 +334,18 @@
     const filterTreinamentoEl = document.getElementById('filterTreinamento');
     const filterRespEl        = document.getElementById('filterResp');
     const filterFinalizadaEl  = document.getElementById('filterFinalizada');
+    const filterEntregaEl     = document.getElementById('filterEntrega'); // NOVO
     const filterPlotagemElContainer = document.createElement('div');
     const clearFiltersBtn     = document.getElementById('clearFilters');
 
     // COLUNAS (Entrega ANTES de Unidade)
     let columns = [
       { key: 'entrega', label: 'Entrega', type: 'select', width: 50, options: '1,2' },
-      { key: 'unidade', label: 'Unidade', type: 'select', width: 200, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e da Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro, Ajuda C, Nova Esperança, Córrego do Ouro, Dona Alba, UBS Barreto/Barramares' },
-      { key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 45, options: 'UBS,UPA,Hospital' },
+      { key: 'unidade', label: 'Unidade', type: 'select', width: 80, options: 'Centro de Saúde Moacyr Santos, Clínica do Idoso, UPA Barra, HPMS - Hospital Serra, Unidade Mista Sana, Clínica do Autista, Casa da Criança e da Adolescente, UBS Novo Cavaleiros, ESF Aroeira, Pronto Socorro Imbetiba, UPA Lagomar, ESF Bosque Azul, ESF Malvinas AC, UBS Lagomar, ESF Glicério, Pronto Socorro Aeroporto, Unidade Mista Córrego do Ouro' },
+      { key: 'tipo', label: 'Tipo de Unidade', type: 'select', width: 90, options: 'UBS,UPA,Hospital' },
       { key: 'dtinicio', label: 'Data Início', type: 'date', width: 120 },
       { key: 'dtfim', label: 'Data Fim', type: 'date', width: 120 },
-      { key: 'tempo', label: 'Tempo (Dias)', type: 'display', width: 25 },
+      { key: 'tempo', label: 'Tempo (Dias)', type: 'display', width: 70 },
       { key: 'treinamento', label: 'Treinamento', type: 'select', width: 40, options: 'Ok,Pendente,Em Andamento' },
       { key: 'resp', label: 'Responsáveis', type: 'select', width: 100, options: 'Alan,Marcelo,Maclaud,Aline,Rachel,Callmed' },
       { key: 'acompanhamento', label: 'Acompanhamento', type: 'select', width: 10, options: 'Realizado, Não Realizado' },
@@ -389,17 +398,22 @@
       });
     }
 
+    // ====== Filtros (inclui Entrega) ======
     function applyFilters(){
       const fT = filterTreinamentoEl.value;
       const fR = filterRespEl.value;
       const fF = filterFinalizadaEl.value;
       const filterPlot = document.getElementById('filterPlotagem');
       const fP = filterPlot ? filterPlot.value : '';
+      const fE = filterEntregaEl ? filterEntregaEl.value : '';
+
       let filtered=[...rows];
-      if(fT) filtered=filtered.filter(r=>r.treinamento===fT);
-      if(fR) filtered=filtered.filter(r=>r.resp===fR);
-      if(fF) filtered=filtered.filter(r=>(r.finalizada||'').trim()===fF);
-      if(fP) filtered=filtered.filter(r=>r.plotagem===fP);
+      if(fT) filtered = filtered.filter(r => r.treinamento === fT);
+      if(fR) filtered = filtered.filter(r => r.resp === fR);
+      if(fF) filtered = filtered.filter(r => (r.finalizada || '').trim() === fF);
+      if(fP) filtered = filtered.filter(r => r.plotagem === fP);
+      if(fE) filtered = filtered.filter(r => (r.entrega || '').toString() === fE);
+
       return filtered;
     }
 
@@ -442,6 +456,7 @@
         select.innerHTML='<option value="">Todos</option>';
       });
 
+      // Plotagem via JS
       filterPlotagemElContainer.innerHTML=`
         <label for="filterPlotagem" class="text-sm block">Plotagem:</label>
         <select id="filterPlotagem" class="select-mini border rounded-lg">
@@ -449,17 +464,22 @@
         </select>`;
       const filterPlotagemElSelect = filterPlotagemElContainer.querySelector('select');
 
-      columns.forEach(col=>{
-        if(col.type==='select'){
-          const id='filter'+col.key.charAt(0).toUpperCase()+col.key.slice(1);
-          const target=document.getElementById(id) || (col.key==='plotagem' ? filterPlotagemElSelect : null);
-          if(target){
-            col.options.split(',').map(s=>s.trim()).filter(Boolean).forEach(opt=>{
-              const op=document.createElement('option'); op.value=opt; op.textContent=opt; target.appendChild(op);
-            });
-          }
+columns.forEach(col=>{
+  if(col.type==='select'){
+    const id='filter'+col.key.charAt(0).toUpperCase()+col.key.slice(1);
+    const target=document.getElementById(id) || (col.key==='plotagem' ? filterPlotagemElSelect : null);
+    if(target){
+      // evita duplicados mesmo se o HTML já tiver opções
+      const existing = new Set([...target.options].map(o => o.value));
+      col.options.split(',').map(s=>s.trim()).filter(Boolean).forEach(opt=>{
+        if(!existing.has(opt)){
+          const op=document.createElement('option'); op.value=opt; op.textContent=opt; target.appendChild(op);
         }
       });
+    }
+  }
+});
+
 
       const filtersContainer=document.querySelector('.flex-wrap.gap-4.mb-3');
       const clearFiltersButton=document.getElementById('clearFilters');
@@ -469,12 +489,14 @@
       filterRespEl.onchange=renderRows;
       filterFinalizadaEl.onchange=renderRows;
       filterPlotagemElSelect.onchange=renderRows;
+      filterEntregaEl.onchange=renderRows; // NOVO
 
       clearFiltersBtn.onclick=()=>{
         filterTreinamentoEl.value='';
         filterRespEl.value='';
         filterFinalizadaEl.value='';
         filterPlotagemElSelect.value='';
+        filterEntregaEl.value=''; // NOVO
         renderRows();
       };
     }
@@ -565,9 +587,12 @@
 
     function updateAllDashboards(){
       const all = [...rows];
-      const e1  = rows.filter(r => (r.entrega||'').toString()==='1');
-      const e2  = rows.filter(r => (r.entrega||'').toString()==='2');
-      updateSection('total', all);
+      const filtered = applyFilters(); // respeita filtros rápidos
+      const e1  = filtered.filter(r => (r.entrega||'').toString()==='1');
+      const e2  = filtered.filter(r => (r.entrega||'').toString()==='2');
+
+      // Total deve refletir o conjunto filtrado também
+      updateSection('total', filtered);
       updateSection('e1', e1);
       updateSection('e2', e2);
     }
@@ -781,9 +806,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
