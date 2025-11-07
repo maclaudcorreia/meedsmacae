@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- ADICIONADO: para capturar Dashboard/Calendário como imagem -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         /* Estilo básico para a tabela e elementos */
         .select-mini {
@@ -112,7 +114,6 @@
             transform: scale(1.1);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-
     </style>
 </head>
 <body class="bg-blue-50 font-sans">
@@ -140,11 +141,9 @@
                     </button>
                 </div>
 
-
                 <div class="relative inline-block text-left">
                     <div>
                         <button type="button" id="downloadButton" class="inline-flex justify-center w-full rounded-md border border-yellow-400 shadow-sm px-4 py-2 bg-yellow-400 text-sm font-medium text-gray-900 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-
                             Exportar Dados
                             <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -165,28 +164,24 @@
             <div class="mt-5 pt-4 border-t border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Filtros Rápidos:</h3>
                 <div class="flex flex-wrap gap-4 mb-3 items-end">
-
                     <div>
                         <label for="filterTreinamento" class="text-sm block">Treinamento:</label>
                         <select id="filterTreinamento" class="select-mini border rounded-lg border-blue-200">
                             <option value="">Todos</option>
                         </select>
                     </div>
-
                     <div>
                         <label for="filterResp" class="text-sm block">Responsáveis:</label>
                         <select id="filterResp" class="select-mini border rounded-lg border-blue-200">
                             <option value="">Todos</option>
                         </select>
                     </div>
-
                     <div>
                         <label for="filterFinalizada" class="text-sm block">Finalizada:</label>
                         <select id="filterFinalizada" class="select-mini border rounded-lg border-blue-200">
                             <option value="">Todos</option>
                         </select>
                     </div>
-
                     <button id="clearFilters" class="bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-bold py-1.5 px-3 rounded-lg transition duration-150 mt-3 sm:mt-0 border border-blue-300">
                         Limpar Filtros
                     </button>
@@ -203,18 +198,15 @@
             </button>
         </div>
 
-
         <div class="bg-white shadow-xl rounded-xl p-6 border border-blue-200">
 
             <div id="tabPrincipalContent">
                 <div class="table-container shadow-md rounded-lg border border-blue-200">
                     <table class="min-w-full divide-y divide-gray-200" id="dataTable">
                         <thead class="bg-blue-50">
-                            <tr id="thead">
-                                </tr>
+                            <tr id="thead"></tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200" id="tbody">
-                            </tbody>
+                        <tbody class="bg-white divide-y divide-gray-200" id="tbody"></tbody>
                     </table>
                 </div>
             </div>
@@ -538,7 +530,6 @@
             `;
             const filterPlotagemElSelect = filterPlotagemElContainer.querySelector('select');
 
-
             columns.forEach(col => {
                 if (col.type === 'select') {
                     const targetEl = document.getElementById(`filter${col.key.charAt(0).toUpperCase() + col.key.slice(1)}`) || (col.key === 'plotagem' ? filterPlotagemElSelect : null);
@@ -559,12 +550,10 @@
             const clearFiltersButton = document.getElementById('clearFilters');
             filtersContainer.insertBefore(filterPlotagemElContainer, clearFiltersButton);
 
-
             filterTreinamentoEl.onchange = renderRows;
             filterRespEl.onchange = renderRows;
             filterFinalizadaEl.onchange = renderRows;
             filterPlotagemElSelect.onchange = renderRows;
-
 
             clearFiltersBtn.onclick = () => {
                 filterTreinamentoEl.value = '';
@@ -613,7 +602,6 @@
             });
         }
 
-
         function updateDashboardData() {
             const total = rows.length;
 
@@ -643,7 +631,6 @@
             const percentualPlotagemAguardando = total === 0 ? 0 : (plotagemAguardando / total) * 100;
             const percentualPlotagemPendente = total === 0 ? 0 : (plotagemPendente / total) * 100;
 
-
             // Atualiza Treinamento
             document.getElementById("progressTreinamentoPercentOk").textContent = percentualOk.toFixed(2);
             document.getElementById("progressTreinamentoPercentPendente").textContent = percentualPendente.toFixed(2);
@@ -663,19 +650,18 @@
             document.getElementById("progressFinalizadaCountSim").textContent = finalizadaSim;
             document.getElementById("progressFinalizadaCountTotal").textContent = total;
 
-            // Atualiza contagens e percentuais de Plotagem
+            // Atualiza Plotagem
             document.getElementById("progressPlotagemPercentRealizado").textContent = percentualPlotagemRealizado.toFixed(2);
             document.getElementById("progressPlotagemPercentAguardando").textContent = percentualPlotagemAguardando.toFixed(2);
             document.getElementById("progressPlotagemPercentPendente").textContent = percentualPlotagemPendente.toFixed(2);
             document.getElementById("progressPlotagemCountRealizado").textContent = plotagemRealizado;
             document.getElementById("progressPlotagemCountTotal").textContent = total;
 
-            // Chamadas de renderização (com a correção anterior)
+            // Render dos gráficos
             updateProgressTreinamentoChart(treinamentoOk, treinamentoPendente, treinamentoAndamento);
             updateProgressAcompanhamentoChart(acompanhamentoRealizado, acompanhamentoNaoRealizado);
             updateProgressFinalizadaChart(finalizadaSim, finalizadaNao);
             updateProgressPlotagemChart(plotagemRealizado, plotagemAguardando, plotagemPendente);
-
         }
 
         // 1. Gráfico ROSCA (Progresso Treinamento OK/Pendente/Em Andamento)
@@ -754,7 +740,6 @@
             });
         }
 
-
         // 3. Gráfico ROSCA (Progresso FINALIZADA SIM/NÃO)
         function updateProgressFinalizadaChart(simCount, naoCount) {
             const ctx = document.getElementById('progressFinalizadaChart').getContext('2d');
@@ -793,94 +778,249 @@
             });
         }
 
-
-        // =======================================================
-        // FUNÇÕES DE EXPORTAÇÃO E CONTROLE (IDÊNTICAS AO ORIGINAL)
-        // =======================================================
+        /* =======================================================
+           📤 EXPORTAÇÃO — Traz Tabela + IMAGENS (Dashboard & Calendário)
+           ======================================================= */
 
         function createDownloadLink(content, type, extension) {
             const BOM = "\uFEFF";
             const blob = new Blob([BOM, content], { type: type });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-
             link.setAttribute('href', url);
             link.setAttribute('download', `tabela_operacional_${new Date().toISOString().slice(0, 10)}.${extension}`);
             link.style.visibility = 'hidden';
-
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
 
-        function prepareData(separator) {
-            const rowsToExport = applyFilters();
-            rowsToExport.forEach(calculateTime);
+        // Helpers de dados para CSV/XLS
+        function buildDashboardRows() {
+          const total = rows.length;
 
-            const exportableColumns = columns.filter(c => c.key !== 'acoes');
+          const treinamentoOk = rows.filter(r => r.treinamento === "Ok").length;
+          const treinamentoPendente = rows.filter(r => r.treinamento === "Pendente").length;
+          const treinamentoAndamento = rows.filter(r => r.treinamento === "Em Andamento").length;
 
-            const headers = exportableColumns.map(c => c.label).join(separator);
+          const acompanhamentoRealizado = rows.filter(r => r.acompanhamento === "Realizado").length;
+          const acompanhamentoNaoRealizado = rows.filter(r => r.acompanhamento === "Não Realizado").length;
 
-            const csvRows = rowsToExport.map(row =>
-                exportableColumns.map(col => {
-                    let value = row[col.key] || '';
-                    value = String(value).replace(/"/g, '""');
-                    if (value.includes(separator) || value.includes('"') || value.includes('\n')) {
-                        value = `"${value}"`;
-                    }
-                    return value;
-                }).join(separator)
-            );
+          const finalizadaSim = rows.filter(r => (r.finalizada || "").trim() === "Sim").length;
+          const finalizadaNao = rows.filter(r => (r.finalizada || "").trim() === "Não").length;
 
-            return [headers, ...csvRows].join('\n');
+          const plotagemRealizado = rows.filter(r => r.plotagem === "Realizado").length;
+          const plotagemAguardando = rows.filter(r => r.plotagem === "Aguardando").length;
+          const plotagemPendente = rows.filter(r => r.plotagem === "Pendente").length;
+
+          function pct(v) { return total === 0 ? "0.00%" : ((v/total)*100).toFixed(2) + "%"; }
+
+          return [
+            { Indicador: "Treinamento - Concluído (Ok)", Contagem: treinamentoOk, Percentual: pct(treinamentoOk) },
+            { Indicador: "Treinamento - Pendente",        Contagem: treinamentoPendente, Percentual: pct(treinamentoPendente) },
+            { Indicador: "Treinamento - Em Andamento",    Contagem: treinamentoAndamento, Percentual: pct(treinamentoAndamento) },
+
+            { Indicador: "Acompanhamento - Realizado",     Contagem: acompanhamentoRealizado, Percentual: pct(acompanhamentoRealizado) },
+            { Indicador: "Acompanhamento - Não Realizado", Contagem: acompanhamentoNaoRealizado, Percentual: pct(acompanhamentoNaoRealizado) },
+
+            { Indicador: "Finalizada - Sim",  Contagem: finalizadaSim, Percentual: pct(finalizadaSim) },
+            { Indicador: "Finalizada - Não",  Contagem: finalizadaNao, Percentual: pct(finalizadaNao) },
+
+            { Indicador: "Plotagem - Realizado",  Contagem: plotagemRealizado, Percentual: pct(plotagemRealizado) },
+            { Indicador: "Plotagem - Aguardando", Contagem: plotagemAguardando, Percentual: pct(plotagemAguardando) },
+            { Indicador: "Plotagem - Pendente",   Contagem: plotagemPendente, Percentual: pct(plotagemPendente) },
+
+            { Indicador: "Total de Registros",    Contagem: total, Percentual: "100.00%" }
+          ];
+        }
+
+        function buildCalendarEvents() {
+          const events = [];
+          const filtered = applyFilters().filter(r => r.dtinicio && r.dtfim);
+          filtered.forEach(r => {
+            const start = new Date(r.dtinicio);
+            const end   = new Date(r.dtfim);
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+              const dateStr = d.toISOString().slice(0,10);
+              events.push({
+                Data: dateStr,
+                Unidade: r.unidade || "",
+                Treinamento: r.treinamento || "",
+                Responsável: r.resp || "",
+                Acompanhamento: r.acompanhamento || "",
+                Finalizada: (r.finalizada || "").toString().trim(),
+                Plotagem: r.plotagem || ""
+              });
+            }
+          });
+          return events;
+        }
+
+        function stringifyTable(headers, rowsArr, sep) {
+          const head = headers.join(sep);
+          const lines = rowsArr.map(obj =>
+            headers.map(h => {
+              let v = obj[h] ?? "";
+              v = String(v).replace(/"/g, '""');
+              if (v.includes(sep) || v.includes('"') || v.includes('\n')) v = `"${v}"`;
+              return v;
+            }).join(sep)
+          );
+          return [head, ...lines].join('\n');
+        }
+
+        function prepareDataAll(separator) {
+          // 1) TABELA DE PROCESSOS
+          const exportableColumns = columns.filter(c => c.key !== 'acoes');
+          const rowsToExport = applyFilters().map(r => {
+            calculateTime(r);
+            const obj = {};
+            exportableColumns.forEach(c => obj[c.label] = r[c.key] ?? "");
+            return obj;
+          });
+          const tabelaCsv = stringifyTable(exportableColumns.map(c => c.label), rowsToExport, separator);
+
+          // 2) DASHBOARD
+          const dashRows = buildDashboardRows();
+          const dashHeaders = ["Indicador", "Contagem", "Percentual"];
+          const dashCsv = stringifyTable(dashHeaders, dashRows, separator);
+
+          // 3) CALENDÁRIO
+          const calRows = buildCalendarEvents();
+          const calHeaders = ["Data", "Unidade", "Treinamento", "Responsável", "Acompanhamento", "Finalizada", "Plotagem"];
+          const calCsv = calRows.length ? stringifyTable(calHeaders, calRows, separator) : "Sem eventos de calendário no intervalo selecionado.";
+
+          return [
+            "=== TABELA DE PROCESSOS ===",
+            tabelaCsv,
+            "",
+            "=== DASHBOARD DE STATUS ===",
+            dashCsv,
+            "",
+            "=== CALENDÁRIO (EVENTOS POR DIA) ===",
+            calCsv
+          ].join('\n');
         }
 
         function exportToCsv() {
-            const content = prepareData(',');
-            createDownloadLink(content, 'text/csv;charset=utf-8;', 'csv');
+          updateDashboardData();
+          const content = prepareDataAll(',');
+          createDownloadLink(content, 'text/csv;charset=utf-8;', 'csv');
         }
 
         function exportToExcel() {
-            const content = prepareData(';');
-            createDownloadLink(content, 'application/vnd.ms-excel;charset=utf-8;', 'xls');
+          updateDashboardData();
+          const content = prepareDataAll(';');
+          createDownloadLink(content, 'application/vnd.ms-excel;charset=utf-8;', 'xls');
         }
 
-        function exportToPDF() {
-            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-                 alert('A biblioteca jsPDF não foi carregada. Verifique sua conexão e as tags <script> no <head>.');
-                 return;
+        // ======= PDF COM TABELA + IMAGENS DO DASHBOARD E CALENDÁRIO =======
+        async function exportToPDF() {
+          if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+            alert('A biblioteca jsPDF não foi carregada. Verifique sua conexão e as tags <script> no <head>.');
+            return;
+          }
+
+          updateDashboardData();
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF('l', 'pt', 'a4');
+          const pageW = doc.internal.pageSize.getWidth();
+          const pageH = doc.internal.pageSize.getHeight();
+          const margin = 40;
+
+          // Helper para inserir imagens grandes em múltiplas páginas
+          function addImageMultipage(imgData) {
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfW = pageW - margin * 2;
+            const pdfH = (imgProps.height * pdfW) / imgProps.width;
+
+            let heightLeft = pdfH;
+            let y = margin;
+
+            // Página atual
+            doc.addImage(imgData, 'PNG', margin, y, pdfW, pdfH);
+            heightLeft -= (pageH - margin * 2);
+
+            // Páginas seguintes (recortes)
+            while (heightLeft > 0) {
+              doc.addPage('l', 'a4');
+              y = margin - (pdfH - heightLeft);
+              doc.addImage(imgData, 'PNG', margin, y, pdfW, pdfH);
+              heightLeft -= (pageH - margin * 2);
             }
+          }
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'pt', 'a4');
-            const rowsToExport = applyFilters();
-            rowsToExport.forEach(calculateTime);
+          // ====== Seção 1: Tabela de Processos ======
+          const rowsToExport = applyFilters().map(r => { calculateTime(r); return r; });
+          const exportableColumns = columns.filter(c => c.key !== 'acoes');
+          const head1 = [exportableColumns.map(c => c.label)];
+          const body1 = rowsToExport.map(r => exportableColumns.map(c => String(r[c.key] ?? "")));
 
-            const exportableColumns = columns.filter(c => c.key !== 'acoes');
-            const head = [exportableColumns.map(c => c.label)];
-            const body = rowsToExport.map(row =>
-                exportableColumns.map(col => String(row[col.key] || ''))
-            );
+          doc.setFontSize(16);
+          doc.text("MEEDS - Controle Operacional", margin, 35);
+          doc.setFontSize(12);
+          doc.text("Tabela de Processos", margin, 55);
 
-            doc.autoTable({
-                head: head,
-                body: body,
-                theme: 'striped',
-                startY: 50,
-                styles: { fontSize: 8, cellPadding: 4, halign: 'center' },
-                headStyles: { fillColor: [59, 130, 246] },
-                didDrawPage: function (data) {
-                    doc.setFontSize(14);
-                    doc.text("Tabela de Operacional - MEEDS MACAÉ", data.settings.margin.left, 30);
+          doc.autoTable({
+            head: head1,
+            body: body1,
+            startY: 65,
+            styles: { fontSize: 8, cellPadding: 4, halign: 'center' },
+            headStyles: { fillColor: [59,130,246] },
+            theme: 'striped',
+            margin: { left: margin, right: margin }
+          });
 
-                    doc.setFontSize(8);
-                    const pageCount = doc.internal.getNumberOfPages();
-                    doc.text(`Página ${data.pageNumber} de ${pageCount}`, doc.internal.pageSize.width - data.settings.margin.right, doc.internal.pageSize.height - 10);
-                }
-            });
+          // Guardar aba atual
+          const currentTab =
+            !document.getElementById('tabPrincipalContent').classList.contains('hidden') ? 'principal' :
+            !document.getElementById('tabDashboardContent').classList.contains('hidden') ? 'dashboard' :
+            'calendario';
 
-            doc.save(`tabela_operacional_${new Date().toISOString().slice(0, 10)}.pdf`);
+          // ====== Seção 2: DASHBOARD como IMAGEM ======
+          doc.addPage('l', 'a4');
+          doc.setFontSize(12);
+          doc.text("Dashboard de Status (Imagem)", margin, 30);
+
+          showTab('dashboard');
+          // aguarda pintura do DOM e render dos charts
+          await new Promise(r => requestAnimationFrame(() => setTimeout(r, 120)));
+
+          const dashEl = document.getElementById('tabDashboardContent');
+          const dashCanvas = await html2canvas(dashEl, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            windowWidth: dashEl.scrollWidth,
+            windowHeight: dashEl.scrollHeight
+          });
+          const dashImg = dashCanvas.toDataURL('image/png', 1.0);
+          addImageMultipage(dashImg);
+
+          // ====== Seção 3: CALENDÁRIO como IMAGEM ======
+          doc.addPage('l', 'a4');
+          doc.setFontSize(12);
+          doc.text("Calendário (Imagem)", margin, 30);
+
+          showTab('calendario');
+          renderCalendar();
+          await new Promise(r => requestAnimationFrame(() => setTimeout(r, 120)));
+
+          const calEl = document.getElementById('tabCalendarioContent');
+          const calCanvas = await html2canvas(calEl, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            windowWidth: calEl.scrollWidth,
+            windowHeight: calEl.scrollHeight
+          });
+          const calImg = calCanvas.toDataURL('image/png', 1.0);
+          addImageMultipage(calImg);
+
+          // Restaurar aba anterior
+          showTab(currentTab);
+
+          doc.save(`meeds_controle_operacional_${new Date().toISOString().slice(0,10)}.pdf`);
         }
 
         // =======================================================
@@ -889,27 +1029,14 @@
 
         // Array de cores vibrantes para as unidades
         const unitColors = [
-            '#FF5733', // Vermelho-Laranja
-            '#33FF57', // Verde-Lima
-            '#3357FF', // Azul Brilhante
-            '#FF33A1', // Rosa Choque
-            '#33FFF6', // Ciano
-            '#FFC300', // Amarelo Ouro
-            '#C70039', // Vermelho Escuro
-            '#900C3F', // Borgonha
-            '#581845', // Roxo Escuro
-            '#008080', // Verde-Azulado
-            '#FF8C00', // Laranja Escuro
-            '#4B0082', // Índigo
-            '#800000', // Marrom
-            '#00FF00', // Verde Puro
-            '#00FFFF', // Aqua
-            '#FF00FF', // Magenta
+            '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
+            '#33FFF6', '#FFC300', '#C70039', '#900C3F',
+            '#581845', '#008080', '#FF8C00', '#4B0082',
+            '#800000', '#00FF00', '#00FFFF', '#FF00FF',
         ];
 
         // Função para obter uma cor consistente para cada unidade
         function getColorForUnit(unitName) {
-            // Simples hash para mapear o nome da unidade a um índice do array de cores
             let hash = 0;
             for (let i = 0; i < unitName.length; i++) {
                 hash = unitName.charCodeAt(i) + ((hash << 5) - hash);
@@ -988,17 +1115,13 @@
                 while (dayCounter <= totalDays) {
                     html += '<tr class="calendar-week-row">';
 
-                    // Renderizar 7 dias (domingo a sábado)
                     for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-                        // Células vazias antes do primeiro dia
                         if (weekRow === 0 && dayOfWeek < firstDayOfWeek) {
                             html += '<td class="calendar-day-cell-empty"></td>';
                         }
-                        // Células vazias depois do último dia
                         else if (dayCounter > totalDays) {
                             html += '<td class="calendar-day-cell-empty"></td>';
                         }
-                        // Células com dias válidos
                         else {
                             const currentDate = new Date(year, month, dayCounter);
                             const dateStr = currentDate.toISOString().split('T')[0];
@@ -1011,10 +1134,7 @@
                             validRows.forEach(row => {
                                 if (dateStr >= row.dtinicio && dateStr <= row.dtfim) {
 	                                    const unitColor = getColorForUnit(row.unidade);
-
-	                                    // Substituir o ícone pelo nome da unidade
 	                                    const label = row.unidade || 'Unidade Sem Nome';
-
 	                                    html += `<div class="calendar-event-badge" style="background-color: ${unitColor}; color: white;" title="${row.unidade} - ${row.treinamento}">${label}</div>`;
                                 }
                             });
@@ -1034,9 +1154,6 @@
                 html += '</div>';
                 html += '</div>';
             });
-
-	            // A legenda de status foi removida, pois a cor agora representa a unidade.
-	            // Se necessário, uma legenda de unidades pode ser adicionada aqui.
 
             calendarioView.innerHTML = html;
         }
@@ -1133,4 +1250,3 @@
     </script>
 </body>
 </html>
-
